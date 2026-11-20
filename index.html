@@ -472,18 +472,25 @@ function quitGame(){
   state='menu'; clearBirds(); $('ov').style.display='flex'; $('msg').textContent='';
   $('panel').innerHTML='<h1>수고하셨어요 👋</h1><p style="text-align:center">잠시 뒤 빈 화면(또는 이전 화면)으로 나가요.<br>진행 상황은 저장돼 있어요.</p><div class="btns"><button onclick="showMenu()">다시 하기</button></div>'; primary=showMenu;
 }
-function showMenu(){ clearBirds(); $('msg').textContent='';
-  state='menu'; $('ov').style.display='flex'; const sv=saved();
-  $('panel').innerHTML=`<h1>🏓 탁구 한 판 · 10단계</h1>
+function showHelp(){
+  clearBirds(); $('msg').textContent=''; state='menu'; $('ov').style.display='flex';
+  $('panel').innerHTML=`<h1>❓ 도움말</h1>
   ${document.body.classList.contains('touch')?'<p>• 화면 아래 버튼으로 해요. 왼쪽 <b>◀ ▶</b> 이동, 오른쪽 <b>치기</b>(꾹 눌렀다 떼면 스매시). <b>깊게/짧게</b>는 누르면 그 코스로 치고, 칠 때 ◀ ▶를 같이 누르고 있으면 그쪽 코너로 가요.</p>':'<p>• <b>← →</b> 이동, <b>Space</b> 치기 (<b>꾹 눌렀다 떼면 스매시</b>). 칠 때 ←/→는 코너 방향, ↑는 깊게, ↓는 짧게.</p>'}
   <p>• 승패는 <b>한 랠리에 1점</b>, <b>7점 먼저</b> 내면 승리(최종 보스 11점). 코트 칸에 적힌 <span class="z3">300</span>·<span class="z2">200</span>·<span class="z1">100</span>은 <b>내 점수</b>예요 — 상대가 못 받은 공이 처음 떨어진 칸의 점수를 얻어요. 네트·아웃은 상대 1점.</p>
   <p>• <b>커브샷</b>(휘는 공)을 쓸 수 있고, 스테이지 2부터 <b>드롭샷</b>(네트 앞에 톡), 3부터 <b>점프 스매시</b>(강력!)도 열려요. <b>📒 기록장</b>에서 업적·스킨·오늘의 도전을 볼 수 있어요. 컴퓨터는 단계마다 더 강해져요. 공은 <b>한 번 튀긴 뒤</b>에 쳐야 해요.</p>
   <p>• 🐦 경기 중 날아다니는 <b>새를 공으로 맞히면</b> 🔥불꽃공 / ⭐보너스 점수 / 기술 게이지 충전 중 하나! &nbsp;(Esc: 메뉴)</p>
   <p>• 🏅 공을 이길 때마다 <b>점수</b>가 쌓여요 (칸 점수 × 100 + 랠리 길이 + 기술·새 보너스, 스테이지가 오를수록 배율↑). 스테이지를 깨면 클리어 보너스!</p>
   <p>• ⚡ 공이 가까이 왔을 때 <b>딱 맞춰</b> 치면 <b>PERFECT!</b> (더 빠른 공 + 게이지 보너스 + 점수). 보조(자동 조준·이동)를 줄이면 점수가 더 붙어요.</p>
-  <p style="text-align:center;color:#9fd0ff">🎯 오늘의 도전: ${dailyGet().n} — ${PD.done?'완료!':(PD.n||0)+' / '+dailyGet().goal}</p>
-  <p style="text-align:center;color:#ffd166">🏅 최고 기록 ${best.toLocaleString()}점${sv>1?` · 현재 누적 ${runTotal.toLocaleString()}점`:''}</p>
-  <div class="btns">${sv>1?`<button onclick="startStage(${sv})">이어하기 (스테이지 ${sv})</button>`:''}<button onclick="newRun()">처음부터</button><button onclick="showBook()">📒 기록장</button><button id="assistbtn" onclick="cycAssist()" style="background:#8892a8">보조: ${assistLabel()}</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`;
+  <div class="btns"><button onclick="showMenu()">돌아가기</button></div>`;
+  primary=showMenu;
+}
+function showMenu(){ clearBirds(); $('msg').textContent='';
+  state='menu'; $('ov').style.display='flex'; const sv=saved();
+  $('panel').innerHTML=`<h1>🏓 탁구 한 판</h1>
+  <p style="text-align:center;color:#9fd0ff;margin:2px 0">🎯 오늘의 도전: ${dailyGet().n} — ${PD.done?'완료!':(PD.n||0)+' / '+dailyGet().goal}</p>
+  <p style="text-align:center;color:#ffd166;margin:2px 0">🏅 최고 기록 ${best.toLocaleString()}점${sv>1?` · 현재 누적 ${runTotal.toLocaleString()}점`:''}</p>
+  <div class="btns">${sv>1?`<button onclick="startStage(${sv})">이어하기 (스테이지 ${sv})</button>`:''}<button onclick="newRun()">${sv>1?'처음부터':'시작하기'}</button></div>
+  <div class="btns" style="margin-top:8px"><button onclick="showHelp()">❓ 도움말</button><button onclick="showBook()">📒 기록장</button><button id="assistbtn" onclick="cycAssist()" style="background:#8892a8">보조: ${assistLabel()}</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`;
   primary=()=>startStage(sv);
 }
 function showOver(winner){
@@ -828,6 +835,7 @@ function fitCam(){
 }
 addEventListener('resize',fitCam); fitCam();
 applySkin(); checkSkins(); updateSkill(); updateTotal(); showMenu(); loop();
+if(/help/.test(location.search)) setTimeout(showHelp,900);
 if(/book/.test(location.search)) setTimeout(()=>{ PS.life=7000; PS.points=60; PS.perfects=12; PS.birds=4; showBook(); },900);
 if(/vtest/.test(location.search)) setTimeout(()=>{ stage=+(/stage=(\d+)/.exec(location.search)||[0,3])[1]; state='over'; score=[11,4]; stageScore=3450; showOver(0); },1200);
 </script>
