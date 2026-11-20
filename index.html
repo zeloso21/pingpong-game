@@ -43,14 +43,15 @@
   #touch .hit{background:rgba(255,170,40,.45);font-size:17px;border-color:#ffd166}
   #touch .tb.on{background:rgba(255,230,120,.75);color:#222;text-shadow:none}
   #touch .tb.lock{opacity:.35}
-  #touch.land{height:0;background:none;border:0;padding:0;pointer-events:none;--bh:clamp(46px,13.5vh,60px)}
-  #touch.land .gL{position:fixed;left:calc(40px + env(safe-area-inset-left,0px));bottom:14px;display:flex;gap:10px}
-  #touch.land .gR{position:fixed;right:calc(68px + env(safe-area-inset-right,0px));bottom:14px;display:grid;grid-template-columns:repeat(3,clamp(56px,8.8vw,78px));grid-auto-rows:var(--bh);gap:8px}
-  #touch.land .tb{width:auto;height:auto;min-width:0;flex:none;flex-direction:column;gap:0;font-size:14px;border-radius:13px;pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.35)}
-  #touch.land .tb small{font-size:9px}
-  #touch.land .gL .tb{width:clamp(84px,14vw,124px);height:calc(var(--bh)*2 + 8px);font-size:36px}
-  #touch.land .mv{background:rgba(70,130,255,.55)} #touch.land .ax{background:rgba(120,126,140,.55)} #touch.land .sk{background:rgba(170,90,255,.55)} #touch.land .hit{background:rgba(255,160,30,.75)}
-  #touch.land .tb.on{background:rgba(255,230,120,.9);color:#222;text-shadow:none;transform:scale(.96)}
+  #touch.land{height:0;background:none;border:0;padding:0;pointer-events:none;--bh:clamp(42px,12vh,52px);--lw:72px;--rw:62px}
+  #touch.land .gL,#touch.land .gR{position:fixed;bottom:12px;display:grid;gap:1px;background:rgba(255,255,255,.42);border:2px solid rgba(255,255,255,.42);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.4);pointer-events:auto}
+  #touch.land .gL{left:calc(10px + env(safe-area-inset-left,0px));grid-template-columns:repeat(2,var(--lw));grid-auto-rows:calc(var(--bh)*2 + 1px)}
+  #touch.land .gR{right:calc(56px + env(safe-area-inset-right,0px));grid-template-columns:repeat(3,var(--rw));grid-auto-rows:var(--bh)}
+  #touch.land .tb{width:auto;height:auto;min-width:0;flex:none;flex-direction:column;gap:0;font-size:13px;border:0;border-radius:0;box-shadow:none;pointer-events:auto}
+  #touch.land .tb small{font-size:8.5px}
+  #touch.land .gL .tb{font-size:30px}
+  #touch.land .mv{background:rgba(60,120,240,.72)} #touch.land .ax{background:rgba(96,102,118,.74)} #touch.land .sk{background:rgba(140,75,225,.72)} #touch.land .hit{background:rgba(255,150,20,.92)}
+  #touch.land .tb.on{background:rgba(255,232,120,.95);color:#222;text-shadow:none}
   #touch.port .gL,#touch.port .gR{display:contents}
   #touch.port .mv{flex:1 1 26%;height:54px;order:0} #touch.port .hit{flex:1 1 34%;height:54px;order:0}
   #touch.port .ax,#touch.port .sk{flex:1 1 17%;height:40px;order:2}
@@ -63,10 +64,11 @@
   body.touch #msg{top:24%}
   body.touch #hint{display:none}
   @media (orientation:landscape){
-    body.touch #score{display:grid;grid-template-columns:auto auto;column-gap:8px;row-gap:0;top:6px;left:calc(40px + env(safe-area-inset-left,0px));right:auto;justify-content:start;align-items:center;background:rgba(10,12,18,.5);padding:6px 12px;border-radius:10px}
+    body.touch #score{display:grid;grid-template-columns:auto auto;column-gap:8px;row-gap:0;top:max(30px,env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));right:auto;justify-content:start;align-items:center;background:rgba(10,12,18,.5);padding:4px 9px;column-gap:6px;border-radius:10px}
+    body.touch .num{font-size:22px;min-width:28px} body.touch #score .pl{font-size:11px;min-width:0} body.touch #mid{font-size:9px;line-height:1.25} body.touch #mid #skill{font-size:10px}
     body.touch #pl0{order:1;display:block;text-align:left} body.touch #s0{order:2} body.touch #pl1{order:3;display:block;text-align:left} body.touch #s1{order:4}
     body.touch #mid{order:5;grid-column:1/3;text-align:center;margin-top:2px}
-    body.touch #menubtn{left:auto;right:calc(68px + env(safe-area-inset-right,0px));top:10px}
+    body.touch #menubtn{left:auto;right:calc(60px + env(safe-area-inset-right,0px));top:max(30px,env(safe-area-inset-top,0px));width:36px;height:36px}
   }
   @media (max-width:520px){ .pl{display:none}.num{min-width:30px;font-size:26px}#score{gap:4px}#mid{font-size:10px;max-width:120px} }
   @media (max-height:560px),(max-width:700px){
@@ -789,6 +791,7 @@ function drawChar(p, time){
 /* ================= 메인 루프 ================= */
 const clock=new THREE.Clock(); let simTime=0;
 function tick(dt){
+  if(/pos=/.test(location.search)) me.x=+(/pos=(-?[\d.]+)/.exec(location.search)[1]);   // 시험용: 사람 위치 고정
   if(hitStopT>0){ hitStopT-=dt; return; }   // 히트스톱: 강한 타구 순간 잠깐 멈춤
   simTime+=dt;
   if(state==='point'){ timer-=dt; if(timer<=0) nextPoint(); }
@@ -797,7 +800,7 @@ function tick(dt){
   if(!me.ai){
     let assist=0;
     if(state==='rally'&&ball.last===1&&ball.v.z>0&&ball.bounces>=1){ const tt=(me.z-ball.pos.z)/ball.v.z; assist=clamp((ball.pos.x+ball.v.x*tt-me.rs*.2)-me.x,-.6,.6)*(1.6*assistLv/2); }
-    const dir=(K.R()?1:0)-(K.L()?1:0), sp=me.mode==='charge'?2.2:3.4, nx=clamp(me.x+dir*sp*dt+assist*dt,-1.15,1.15); me.vx=(nx-me.x)/dt; me.x=nx;
+    const dir=(K.R()?1:0)-(K.L()?1:0), sp=me.mode==='charge'?2.2:3.4, nx=clamp(me.x+dir*sp*dt+assist*dt,-1.0,1.0); me.vx=(nx-me.x)/dt; me.x=nx;
   }
   players.forEach(p=>{ if(p.ai) aiControl(p,dt); chaseZ(p,dt); });
   players.forEach(p=>updatePlayer(p,dt,simTime)); updateBirds(dt);
@@ -832,6 +835,13 @@ function fitCam(){
   if(a>=1.2){ camera.fov=40; camera.position.y=3.7; camera.position.z=5.3; LOOKY=-.25; LOOKZ=.1; }
   else { camera.fov=Math.min(85, 2*Math.atan(Math.tan(22*Math.PI/180)*1.2/a)*180/Math.PI); camera.position.y=3.7; camera.position.z=5.3; LOOKY=-.25; LOOKZ=.1; }
   camera.updateProjectionMatrix(); renderer.setSize(w,h);
+  if(touch&&land){   // 사람이 갈 수 있는 맨 끝(±1.0m + 몸 반폭)이 화면 어디인지 계산 → 버튼이 그 안쪽을 넘지 않게
+    camera.position.x=0; camera.lookAt(0,LOOKY,LOOKZ); camera.updateMatrixWorld();
+    const v=new THREE.Vector3(1.0+.4,.3,PZ).project(camera), side=innerWidth/2-Math.abs(v.x)*innerWidth/2-6;
+    const css=document.documentElement.style;
+    css.setProperty('--lw',clamp((side-10-6)/2,40,84)+'px'); css.setProperty('--rw',clamp((side-56-6)/3,40,68)+'px');
+    css.setProperty('--bh',clamp(innerHeight*.12,40,54)+'px');
+  }
 }
 addEventListener('resize',fitCam); fitCam();
 applySkin(); checkSkins(); updateSkill(); updateTotal(); showMenu(); loop();
