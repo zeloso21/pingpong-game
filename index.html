@@ -524,10 +524,10 @@ function birdEffect(who){
   if(!isTouch) return;
   document.body.classList.add('touch'); const box=$('touch'); box.style.display='flex';
   addEventListener('contextmenu',e=>e.preventDefault());
-  const defs=[['ArrowLeft','◀','mv'],['ArrowRight','▶','mv'],['Space','치기<small>꾹=스매시</small>','hit'],
-              ['DeepHit','깊게<small>끝쪽</small>','ax gs'],['ShortHit','짧게<small>네트앞</small>','ax'],
-              ['KeyZ','커브<small>1칸</small>','sk gs'],['KeyX','드롭<small>1칸</small>','sk'],['KeyC','점프<small>2칸</small>','sk'],
-              ['Escape','☰','']];
+  const defs=[['ArrowLeft','◀','mv'],['ArrowRight','▶','mv'],
+              ['KeyC','점프<small>2칸</small>','sk gs'],['KeyX','드롭<small>1칸</small>','sk'],
+              ['DeepHit','깊게<small>끝쪽</small>','ax gs'],['ShortHit','짧게<small>네트앞</small>','ax'],['KeyZ','커브<small>1칸</small>','sk'],
+              ['Space','치기<small>꾹=스매시</small>','hit'],['Escape','☰','']];
   const els={};
   defs.forEach(([code,label,cls])=>{
     const b=document.createElement('div'); b.className='tb '+cls; b.innerHTML=label; els[code]=b;
