@@ -32,7 +32,7 @@
   html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none}
   #ov{z-index:10}
   #panel{box-sizing:border-box;width:min(520px,calc(100vw - 24px));max-height:92vh;overflow:auto}
-  #touch{position:fixed;left:0;right:0;bottom:0;height:128px;background:#0e1219;border-top:3px solid #ffd166;display:none;z-index:5;touch-action:none}
+  #touch{position:fixed;left:0;right:0;bottom:0;height:128px;background:rgba(14,18,25,.9);border-top:3px solid #ffd166;display:none;z-index:5;touch-action:none}
   .tb.pill{border-radius:18px;font-size:13px}
   #touch{display:none;flex-wrap:wrap;gap:6px;padding:8px;box-sizing:border-box;align-content:stretch}
   #touch .tb{position:static;border-radius:10px;flex-direction:column;gap:1px;font-size:13px}
@@ -821,9 +821,8 @@ function fitCam(){
   const touch=document.body.classList.contains('touch'), land=innerWidth>=innerHeight;
   const bar=touch?(land?104:124):0; document.documentElement.style.setProperty('--bar',bar+'px');
   if(touch){ $('touch').style.height=bar+'px'; if(window.layoutTouch) window.layoutTouch(); }
-  const w=innerWidth, h=Math.max(120,innerHeight-bar), a=w/h; camera.aspect=a;
-  if(a>=1.9){ camera.fov=32; camera.position.y=3.1; camera.position.z=4.3; LOOKY=-.1; LOOKZ=-.05; }
-  else if(a>=1.2){ camera.fov=44; camera.position.y=3.7; camera.position.z=5.3; LOOKY=-.25; LOOKZ=.1; }
+  const w=innerWidth, h=(touch&&land)?innerHeight:Math.max(120,innerHeight-bar), a=w/h; camera.aspect=a;   // 가로 폰 화면: 플레이 화면을 처음처럼 전체 높이로 그리고 조작 칸이 아래를 덮음
+  if(a>=1.2){ camera.fov=44; camera.position.y=3.7; camera.position.z=5.3; LOOKY=(touch&&land)?-.5:-.25; LOOKZ=.1; }
   else { camera.fov=Math.min(85, 2*Math.atan(Math.tan(22*Math.PI/180)*1.2/a)*180/Math.PI); camera.position.y=3.7; camera.position.z=5.3; LOOKY=-.25; LOOKZ=.1; }
   camera.updateProjectionMatrix(); renderer.setSize(w,h);
 }
