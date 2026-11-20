@@ -457,10 +457,9 @@ function startStage(n){
   stage=n; save(n); score=[0,0]; stageScore=0; server=0; rallyCount=0; gauge=Math.max(gauge,1); curLoss=ldn('ppLoss'+n); updateScore(); updateSkill(); updateTotal();
   const g=stg(); cpu.char.cloth.color.setHSL((n*.093)%1,.55,.45);
   $('goal').textContent=`스테이지 ${n}/10 · ${g.t}점 선승`;
-  let unlock = n===1?'<p>💡 공이 내 쪽으로 튀어 오면 <b>Z</b>를 눌러 <b>커브샷</b>! 공이 휘어서 날아가 상대가 위치를 잘못 읽어요. (기술 게이지 1칸 사용)</p>' : n===2?'<p>🆕 <b>새 기술 해금: X 드롭샷</b> — 네트 앞에 톡 떨어뜨려요. 상대가 앞으로 나와야 합니다.</p>' : n===3?'<p>🆕 <b>새 기술 해금: C 점프 스매시</b> — 높이 뛰어올라 내려치는 강력한 샷! 기술 게이지 2칸을 쓰고, 상대가 받기 아주 어려워요.</p>' : '';
-  if(document.body.classList.contains('touch')) unlock=unlock.replace('<b>Z</b>를','<b>커브 버튼</b>을').replace('X 드롭샷','드롭샷').replace('C 점프 스매시','점프 스매시');
+  const unlock = n===1?'💡 커브샷을 쓸 수 있어요':n===2?'🆕 드롭샷 해금!':n===3?'🆕 점프 스매시 해금!':'';   // 자세한 설명은 메뉴의 도움말에
   state='intro'; $('ov').style.display='flex';
-  $('panel').innerHTML=`<h1>스테이지 ${n}</h1><p style="text-align:center;font-size:22px;color:#ffd166;margin:2px 0">${g.name}</p><p style="text-align:center">${g.desc}</p>${unlock}<p style="text-align:center;color:#9fd0ff">⚔ ${g.trait}</p><p style="text-align:center">${g.t}점 먼저 내면 승리</p><div class="btns"><button onclick="beginStage()">시작 (Space)</button></div>`;
+  $('panel').innerHTML=`<h1 style="font-size:22px;margin:0 0 4px">스테이지 ${n} · <span style="color:#ffd166">${g.name}</span></h1><p style="text-align:center;color:#9fd0ff;margin:4px 0">⚔ ${g.trait}</p>${unlock?`<p style="text-align:center;margin:2px 0">${unlock}</p>`:''}<p style="text-align:center;opacity:.8;margin:2px 0">${g.t}점 선승</p><div class="btns" style="margin-top:8px"><button onclick="beginStage()">시작</button></div>`;
   primary=beginStage;
 }
 function newRun(){ runTotal=0; svn('ppTotal',0); startStage(1); }
@@ -835,6 +834,7 @@ function fitCam(){
 }
 addEventListener('resize',fitCam); fitCam();
 applySkin(); checkSkins(); updateSkill(); updateTotal(); showMenu(); loop();
+if(/intro/.test(location.search)) setTimeout(()=>startStage(+(/stage=(\d+)/.exec(location.search)||[0,3])[1]),900);
 if(/help/.test(location.search)) setTimeout(showHelp,900);
 if(/book/.test(location.search)) setTimeout(()=>{ PS.life=7000; PS.points=60; PS.perfects=12; PS.birds=4; showBook(); },900);
 if(/vtest/.test(location.search)) setTimeout(()=>{ stage=+(/stage=(\d+)/.exec(location.search)||[0,3])[1]; state='over'; score=[11,4]; stageScore=3450; showOver(0); },1200);
