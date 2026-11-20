@@ -32,7 +32,7 @@
   html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none}
   #ov{z-index:10}
   #panel{box-sizing:border-box;width:min(520px,calc(100vw - 24px));max-height:92vh;overflow:auto}
-  #touch{position:fixed;left:0;right:0;bottom:0;height:128px;background:rgba(14,18,25,.9);border-top:3px solid #ffd166;display:none;z-index:5;touch-action:none}
+  #touch{position:fixed;left:0;right:0;bottom:0;height:128px;background:#0e1219;border-top:3px solid #ffd166;display:none;z-index:5;touch-action:none}
   .tb.pill{border-radius:18px;font-size:13px}
   #touch{display:none;flex-wrap:wrap;gap:6px;padding:8px;box-sizing:border-box;align-content:stretch}
   #touch .tb{position:static;border-radius:10px;flex-direction:column;gap:1px;font-size:13px}
@@ -43,13 +43,12 @@
   #touch .hit{background:rgba(255,170,40,.45);font-size:17px;border-color:#ffd166}
   #touch .tb.on{background:rgba(255,230,120,.75);color:#222;text-shadow:none}
   #touch .tb.lock{opacity:.35}
-  #touch.land{flex-wrap:nowrap;padding:6px 8px;gap:8px}
-  #touch.land .gL{display:flex;gap:8px;flex:1.35 1 0}
-  #touch.land .gL .tb{flex:1 1 0;height:100%}
-  #touch.land .gR{display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:1fr 1fr;gap:6px;flex:2.5 1 0}
-  #touch.land .gR .tb{height:auto;flex-direction:row;gap:4px}
-  #touch.land .gR .sk{grid-column:span 2} #touch.land .gR .ax{grid-column:span 3}
-  #touch.land .hit{flex:1.1 1 0;height:100%}
+  #touch.land{flex-wrap:nowrap;padding:5px 10px;gap:0;justify-content:space-between;align-items:stretch}
+  #touch.land .gL,#touch.land .gR{display:flex;gap:6px;flex:0 0 auto}
+  #touch.land .tb{height:100%;width:auto;aspect-ratio:1/1;flex:0 0 auto;flex-direction:column;gap:0;font-size:12px;border-radius:9px}
+  #touch.land .tb small{font-size:8px}
+  #touch.land .mv{font-size:22px}
+  #touch.land .gR .gap{margin-left:8px}
   #touch.port .gL,#touch.port .gR{display:contents}
   #touch.port .mv{flex:1 1 26%;height:54px;order:0} #touch.port .hit{flex:1 1 34%;height:54px;order:0}
   #touch.port .ax,#touch.port .sk{flex:1 1 17%;height:40px;order:2}
@@ -684,7 +683,7 @@ function birdEffect(who){
   const defs=[['ArrowLeft','◀','mv',gL],['ArrowRight','▶','mv',gL],
               ['KeyZ','커브<small>1칸</small>','sk',gR],['KeyX','드롭<small>1칸</small>','sk',gR],['KeyC','점프<small>2칸</small>','sk',gR],
               ['DeepHit','깊게<small>끝쪽</small>','ax',gR],['ShortHit','짧게<small>네트앞</small>','ax',gR],
-              ['Space','치기<small>꾹=스매시</small>','hit',box],['Escape','☰','',null]];
+              ['Space','치기<small>꾹=스매시</small>','hit',gR],['Escape','☰','',null]];
   const els={};
   defs.forEach(([code,label,cls,parent])=>{
     const b=document.createElement('div'); b.className='tb '+cls; b.innerHTML=label; els[code]=b;
@@ -825,10 +824,10 @@ function loop(){
 let LOOKY=-.25, LOOKZ=.1;
 function fitCam(){
   const touch=document.body.classList.contains('touch'), land=innerWidth>=innerHeight;
-  const bar=touch?(land?104:124):0; document.documentElement.style.setProperty('--bar',bar+'px');
+  const bar=touch?(land?66:124):0; document.documentElement.style.setProperty('--bar',bar+'px');
   if(touch){ $('touch').style.height=bar+'px'; if(window.layoutTouch) window.layoutTouch(); }
-  const w=innerWidth, h=(touch&&land)?innerHeight:Math.max(120,innerHeight-bar), a=w/h; camera.aspect=a;   // 가로 폰 화면: 플레이 화면을 처음처럼 전체 높이로 그리고 조작 칸이 아래를 덮음
-  if(a>=1.2){ camera.fov=44; camera.position.y=3.7; camera.position.z=5.3; LOOKY=(touch&&land)?-.5:-.25; LOOKZ=.1; }
+  const w=innerWidth, h=Math.max(120,innerHeight-bar), a=w/h; camera.aspect=a;
+  if(a>=1.2){ camera.fov=40; camera.position.y=3.7; camera.position.z=5.3; LOOKY=-.25; LOOKZ=.1; }
   else { camera.fov=Math.min(85, 2*Math.atan(Math.tan(22*Math.PI/180)*1.2/a)*180/Math.PI); camera.position.y=3.7; camera.position.z=5.3; LOOKY=-.25; LOOKZ=.1; }
   camera.updateProjectionMatrix(); renderer.setSize(w,h);
 }
