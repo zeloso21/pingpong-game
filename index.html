@@ -69,6 +69,12 @@
     #msg{font-size:26px}.pop3d{font-size:30px}
     #panel{padding:14px 18px}#panel h1{font-size:24px}#panel p{font-size:13px;margin:4px 0}.btns{margin-top:10px}.btns button{font-size:15px;padding:9px 14px}
   }
+  #tot{font-size:13px;font-weight:800;color:#ffd166}
+  #vfx{position:fixed;inset:0;pointer-events:none;z-index:11;overflow:hidden}
+  .vv{position:absolute;bottom:-90px;opacity:0;animation:vrise 3s ease-out forwards}
+  @keyframes vrise{0%{transform:translateY(0) rotate(var(--r));opacity:0}12%{opacity:1}100%{transform:translateY(-120vh) rotate(calc(var(--r) * -1));opacity:.9}}
+  .bigv{position:absolute;top:26%;left:0;right:0;text-align:center;font-size:64px;font-weight:900;color:#ffe066;text-shadow:0 4px 12px #000;animation:bigpop 1.8s ease-out forwards}
+  @keyframes bigpop{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.2);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:scale(1.1);opacity:0}}
   #mid #skill{position:static;font-size:12px;line-height:1.3;margin-top:1px;text-shadow:0 1px 3px #000}
   #skill{position:fixed;bottom:44px;left:16px;color:#fff;font-size:15px;text-shadow:0 1px 4px #000;pointer-events:none;line-height:1.5}
   #skill b{color:#ffd166}
@@ -78,10 +84,11 @@
 <body>
 <div id="score">
   <div class="pl" id="pl0">나</div><div class="num" id="s0">0</div>
-  <div id="mid"><div id="goal"></div><div id="rally"></div><div id="skill"></div></div>
+  <div id="mid"><div id="goal"></div><div id="tot"></div><div id="rally"></div><div id="skill"></div></div>
   <div class="num" id="s1">0</div><div class="pl" id="pl1">컴퓨터</div>
 </div>
 <div id="msg"></div>
+<div id="vfx"></div>
 <div id="touch"></div>
 <div id="chargewrap"><div id="charge"></div></div>
 <div id="hint">← → 이동 &nbsp;·&nbsp; ↑ 깊게 / ↓ 짧게 &nbsp;·&nbsp; <b>Space</b> 치기 (꾹 눌렀다 떼면 <b>스매시</b>) &nbsp;·&nbsp; <b>Z</b> 커브샷(공이 튀어 올 때 누르기) &nbsp;·&nbsp; <b>X</b> 드롭샷(2단계~) &nbsp;·&nbsp; <b>C</b> 점프 스매시(3단계~, 게이지 2칸)</div>
@@ -105,6 +112,26 @@ const STAGES = [
   {name:'탁구의 신 (최종)',    desc:'최종 보스. 15점 선승!',                                    speed:2.8,react:.08,track:.03,smash:.42,corner:.60,err:.03,curve:.30,drop:.30,spin:1,  t:15}
 ];
 let stage=1, gauge=2, primary=null;
+function ldn(k){ try{ return parseInt(localStorage.getItem(k)||'0')||0; }catch(e){ return 0; } }
+function svn(k,v){ try{ localStorage.setItem(k,String(v)); }catch(e){} }
+let runTotal=ldn('ppTotal'), stageScore=0, best=ldn('ppBest');
+const total=()=>runTotal+stageScore;
+function updateTotal(){ const e=$('tot'); if(e) e.textContent='점수 '+total().toLocaleString(); }
+function calcScore(info,birdB){
+  info=info||{}; let sc=info.kind==='zone'?info.val*100:50;
+  sc+=Math.min(300,ball.rally*10);
+  if(info.kind==='zone'){ sc+=({smash:100,curve:80,drop:80,jump:150})[info.tech]||0; if(info.fire) sc+=120; }
+  sc+=birdB*50;
+  return Math.round(sc*(1+.1*(stage-1)));
+}
+function vfx(n,big){
+  const box=$('vfx'); box.innerHTML='';
+  for(let i=0;i<n;i++){ const e=document.createElement('div'); e.className='vv'; e.textContent=(big&&i%5===3)?'🎉':'✌️';
+    e.style.left=(4+Math.random()*90)+'%'; e.style.fontSize=(big?36+Math.random()*64:46+Math.random()*56)+'px';
+    e.style.setProperty('--r',(Math.random()*40-20)+'deg'); e.style.animationDuration=(2.4+Math.random()*1.8)+'s'; e.style.animationDelay=(Math.random()*(big?3.5:1.2))+'s'; box.appendChild(e); }
+  const b=document.createElement('div'); b.className='bigv'; b.textContent=big?'✌️ V V V ✌️':'✌️ V!'; box.appendChild(b);
+  setTimeout(()=>{ box.innerHTML=''; }, big?8000:5200);
+}
 const stg=()=>STAGES[stage-1];
 function saved(){ try{ return clamp(parseInt(localStorage.getItem('ppStage')||'1'),1,10); }catch(e){ return 1; } }
 function save(n){ try{ localStorage.setItem('ppStage',String(n)); }catch(e){} }
@@ -300,11 +327,14 @@ function popup(text, wp){
 }
 function updateScore(){ $('s0').textContent=score[0]; $('s1').textContent=score[1]; }
 
-function endPoint(winner, pts, text, at, cls){
+function endPoint(winner, pts, text, at, cls, info){
   if(state!=='rally') return;
+  const birdB=bonus[winner]||0;
   if(bonus[winner]){ pts+=bonus[winner]; text+=` (🐦보너스 포함)`; } bonus=[0,0];
+  let sc=0;
+  if(winner===0){ sc=calcScore(info,birdB); stageScore+=sc; if(total()>best){ best=total(); svn('ppBest',best); } updateTotal(); text+=` · +${sc.toLocaleString()}점`; }
   score[winner]+=pts; state='point'; timer=1.7; updateScore(); stats.rallies++;
-  say(text, cls); if(at) popup('+'+pts, at);
+  say(text, cls); if(at) popup(winner===0?('+'+sc.toLocaleString()):('+'+pts), at);
   (winner===0?SFX.win:SFX.lose)();
   $('rally').textContent='';
   if(winner===0){ gauge=Math.min(3,gauge+.7); updateSkill(); }
@@ -312,12 +342,12 @@ function endPoint(winner, pts, text, at, cls){
 }
 function fault(faulter, why){
   stats.faults++; if(why==='네트') SFX.net();
-  const w=1-faulter; endPoint(w,1,`${why}! ${w===0?'나':'컴퓨터'} +1`, ball.pos, faulter===0?'bad':'');
+  const w=1-faulter; endPoint(w,1,`${why}! ${w===0?'나':'컴퓨터'} +1`, ball.pos, faulter===0?'bad':'', {kind:'fault'});
 }
 function winByZone(hitter){
   const zn=ball.zone||{val:1,row:1,col:1}; stats.zoneWins++;
   const label=zn.val===3?'코너 명중!':zn.val===2?'좋은 코스!':'득점';
-  endPoint(hitter, zn.val, hitter===0?`${label} +${zn.val}`:`컴퓨터 ${label} +${zn.val}`, ball.pos, hitter===0?'':'bad');
+  endPoint(hitter, zn.val, hitter===0?`${label} +${zn.val}`:`컴퓨터 ${label} +${zn.val}`, ball.pos, hitter===0?'':'bad', {kind:'zone',val:zn.val,tech:ball.tech,fire:ball.fire});
 }
 function nextPoint(){
   rallyCount++; if(rallyCount%2===0) server=1-server;
@@ -336,7 +366,7 @@ function updateSkill(){
   if(window.lockTouch) window.lockTouch();
 }
 function startStage(n){
-  stage=n; save(n); score=[0,0]; server=0; rallyCount=0; gauge=Math.max(gauge,2); updateScore(); updateSkill();
+  stage=n; save(n); score=[0,0]; stageScore=0; server=0; rallyCount=0; gauge=Math.max(gauge,2); updateScore(); updateSkill(); updateTotal();
   const g=stg(); cpu.char.cloth.color.setHSL((n*.093)%1,.55,.45);
   $('goal').textContent=`스테이지 ${n}/10 · ${g.t}점 선승`;
   const unlock = n===1?'<p>💡 공이 내 쪽으로 튀어 오면 <b>Z</b>를 눌러 <b>커브샷</b>! 공이 휘어서 날아가 상대가 위치를 잘못 읽어요. (기술 게이지 1칸 사용)</p>' : n===2?'<p>🆕 <b>새 기술 해금: X 드롭샷</b> — 네트 앞에 톡 떨어뜨려요. 상대가 앞으로 나와야 합니다.</p>' : n===3?'<p>🆕 <b>새 기술 해금: C 점프 스매시</b> — 높이 뛰어올라 내려치는 강력한 샷! 기술 게이지 2칸을 쓰고, 상대가 받기 아주 어려워요.</p>' : '';
@@ -344,6 +374,7 @@ function startStage(n){
   $('panel').innerHTML=`<h1>스테이지 ${n}</h1><p style="text-align:center;font-size:22px;color:#ffd166;margin:2px 0">${g.name}</p><p style="text-align:center">${g.desc}</p>${unlock}<p style="text-align:center">${g.t}점 먼저 내면 승리</p><div class="btns"><button onclick="beginStage()">시작 (Space)</button></div>`;
   primary=beginStage;
 }
+function newRun(){ runTotal=0; svn('ppTotal',0); startStage(1); }
 function beginStage(){ $('ov').style.display='none'; $('msg').textContent=''; startServe(); }
 function quitGame(){
   try{ const A=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App; if(A&&A.exitApp){ A.exitApp(); return; } }catch(e){}
@@ -357,18 +388,27 @@ function showMenu(){ clearBirds(); $('msg').textContent='';
   $('panel').innerHTML=`<h1>🏓 탁구 한 판 · 10단계</h1>
   <p>• <b>← →</b> 이동, <b>Space</b> 치기 (<b>꾹 눌렀다 떼면 스매시</b>). 칠 때 ←/→는 코너 방향, ↑는 깊게, ↓는 짧게.</p>
   <p>• 코트 9칸에 <span class="z3">3</span>·<span class="z2">2</span>·<span class="z1">1</span>점. 상대가 못 받은 공이 처음 떨어진 칸의 점수를 얻어요. 네트·아웃은 상대 +1.</p>
-  <p>• <b>Z 커브샷</b>(휘는 공)을 쓸 수 있고, 스테이지 2부터 <b>X 드롭샷</b>(네트 앞에 톡), 3부터 <b>C 점프 스매시</b>(강력!)도 열려요. 컴퓨터는 단계마다  컴퓨터는 더 강해져요. 공은 <b>한 번 튀긴 뒤</b>에 쳐야 해요.</p>
+  <p>• <b>Z 커브샷</b>(휘는 공)을 쓸 수 있고, 스테이지 2부터 <b>X 드롭샷</b>(네트 앞에 톡), 3부터 <b>C 점프 스매시</b>(강력!)도 열려요. 컴퓨터는 단계마다 더 강해져요. 공은 <b>한 번 튀긴 뒤</b>에 쳐야 해요.</p>
   <p>• 🐦 경기 중 날아다니는 <b>새를 공으로 맞히면</b> 🔥불꽃공 / ⭐보너스 점수 / 기술 게이지 충전 중 하나! &nbsp;(Esc: 메뉴)</p>
-  <div class="btns">${sv>1?`<button onclick="startStage(${sv})">이어하기 (스테이지 ${sv})</button>`:''}<button onclick="startStage(1)">처음부터</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`;
+  <p>• 🏅 공을 이길 때마다 <b>점수</b>가 쌓여요 (칸 점수 × 100 + 랠리 길이 + 기술·새 보너스, 스테이지가 오를수록 배율↑). 스테이지를 깨면 클리어 보너스!</p>
+  <p style="text-align:center;color:#ffd166">🏅 최고 기록 ${best.toLocaleString()}점${sv>1?` · 현재 누적 ${runTotal.toLocaleString()}점`:''}</p>
+  <div class="btns">${sv>1?`<button onclick="startStage(${sv})">이어하기 (스테이지 ${sv})</button>`:''}<button onclick="newRun()">처음부터</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`;
   primary=()=>startStage(sv);
 }
 function showOver(winner){
-  $('ov').style.display='flex'; const last=stage>=10;
+  const last=stage>=10; $('ov').style.display=winner===0?'none':'flex';   // 이기면 V 연출을 먼저 보여주고 결과 창은 잠시 뒤에
+  const btn2='<button onclick="showMenu()" style="background:#8892a8">메뉴</button><button onclick="quitGame()" style="background:#8892a8">종료</button>';
   if(winner===0){
-    if(last){ save(1); $('panel').innerHTML=`<h1>🏆 전체 클리어!</h1><p style="text-align:center;font-size:22px">${score[0]} : ${score[1]}</p><p style="text-align:center">탁구의 신을 꺾었어요. 축하합니다!</p><div class="btns"><button onclick="showMenu()">처음으로</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`; primary=showMenu; }
-    else { save(stage+1); $('panel').innerHTML=`<h1>🎉 스테이지 ${stage} 클리어!</h1><p style="text-align:center;font-size:22px">${score[0]} : ${score[1]}</p><p style="text-align:center">다음 상대: <b>${STAGES[stage].name}</b></p><div class="btns"><button onclick="startStage(${stage+1})">다음 스테이지 (Space)</button><button onclick="showMenu()" style="background:#8892a8">메뉴</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`; primary=()=>startStage(stage+1); }
+    const margin=Math.max(0,score[0]-score[1]), clear=1000+stage*200+margin*100, gain=stageScore;
+    runTotal+=gain+clear; stageScore=0; svn('ppTotal',runTotal); if(runTotal>best){ best=runTotal; svn('ppBest',best); } updateTotal();
+    const rows=`<p style="text-align:center;line-height:1.7">이번 스테이지 점수 <b>${gain.toLocaleString()}</b><br>클리어 보너스 <b>+${clear.toLocaleString()}</b> <span style="opacity:.7">(기본 1,000 + 스테이지 ${stage*200} + 점수차 ${margin}×100)</span><br>누적 점수 <b style="color:#ffd166;font-size:20px">${runTotal.toLocaleString()}</b> · 최고 기록 <b>${best.toLocaleString()}</b></p>`;
+    if(last){ vfx(60,true); SFX.win(); save(1); const fin=runTotal; runTotal=0; svn('ppTotal',0);
+      $('panel').innerHTML=`<h1>🏆 전체 클리어!</h1><p style="text-align:center;font-size:22px">${score[0]} : ${score[1]}</p><p style="text-align:center">탁구의 신을 꺾었어요. 축하합니다!</p><p style="text-align:center;font-size:24px;color:#ffd166"><b>최종 점수 ${fin.toLocaleString()}</b></p><p style="text-align:center">최고 기록 ${best.toLocaleString()}</p><div class="btns"><button onclick="showMenu()">처음으로</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`; primary=showMenu; }
+    else { vfx(14,false); SFX.win(); save(stage+1);
+      $('panel').innerHTML=`<h1>🎉 스테이지 ${stage} 클리어!</h1><p style="text-align:center;font-size:22px">${score[0]} : ${score[1]}</p>${rows}<p style="text-align:center">다음 상대: <b>${STAGES[stage].name}</b></p><div class="btns"><button onclick="startStage(${stage+1})">다음 스테이지 (Space)</button>${btn2}</div>`; primary=()=>startStage(stage+1); }
+    setTimeout(()=>{ $('ov').style.display='flex'; ovT=Date.now(); }, last?3400:1800);
   } else {
-    $('panel').innerHTML=`<h1>😵 패배</h1><p style="text-align:center;font-size:22px">${score[0]} : ${score[1]}</p><p style="text-align:center">${stg().name}에게 졌어요. 다시 도전!</p><div class="btns"><button onclick="startStage(${stage})">다시 도전 (Space)</button><button onclick="showMenu()">메뉴</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`; primary=()=>startStage(stage);
+    $('panel').innerHTML=`<h1>😵 패배</h1><p style="text-align:center;font-size:22px">${score[0]} : ${score[1]}</p><p style="text-align:center">${stg().name}에게 졌어요. 다시 도전!<br><span style="opacity:.75;font-size:12px">이번 스테이지에서 쌓은 ${stageScore.toLocaleString()}점은 클리어해야 저장돼요 · 누적 ${runTotal.toLocaleString()}점</span></p><div class="btns"><button onclick="startStage(${stage})">다시 도전 (Space)</button>${btn2}</div>`; primary=()=>startStage(stage);
   }
 }
 
@@ -653,7 +693,7 @@ function loop(){
   const cx=me.x*.35; camera.position.x+=(cx-camera.position.x)*.06; camera.lookAt(camera.position.x*.4,LOOKY,LOOKZ);
   renderer.render(scene,camera);
   window.__dbg={state,score:score.slice(),stage,stats,server};
-  if(DEMO) document.title=`t${simTime|0} h${ball.rally} b${ball.bounces} y${ball.pos.y.toFixed(2)} z${ball.pos.z.toFixed(2)} S ${score[0]}:${score[1]} ${state} r${stats.rallies} sm${stats.smashes} bd${stats.birds||0} f${stats.faults} z${stats.zoneWins}`;
+  if(DEMO) document.title=`tot${total()} t${simTime|0} h${ball.rally} b${ball.bounces} y${ball.pos.y.toFixed(2)} z${ball.pos.z.toFixed(2)} S ${score[0]}:${score[1]} ${state} r${stats.rallies} sm${stats.smashes} bd${stats.birds||0} f${stats.faults} z${stats.zoneWins}`;
 }
 let LOOKY=-.25, LOOKZ=.1;
 function fitCam(){
@@ -667,7 +707,8 @@ function fitCam(){
   camera.updateProjectionMatrix(); renderer.setSize(w,h);
 }
 addEventListener('resize',fitCam); fitCam();
-updateSkill(); showMenu(); loop();
+updateSkill(); updateTotal(); showMenu(); loop();
+if(/vtest/.test(location.search)) setTimeout(()=>{ stage=+(/stage=(\d+)/.exec(location.search)||[0,3])[1]; state='over'; score=[11,4]; stageScore=3450; showOver(0); },1200);
 </script>
 </body>
 </html>
