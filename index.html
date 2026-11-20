@@ -43,11 +43,14 @@
   #touch .hit{background:rgba(255,170,40,.45);font-size:17px;border-color:#ffd166}
   #touch .tb.on{background:rgba(255,230,120,.75);color:#222;text-shadow:none}
   #touch .tb.lock{opacity:.35}
-  #touch.land{flex-wrap:nowrap}
-  #touch.land .tb{flex:1 1 0;height:100%}
-  #touch.land{padding:6px}
-  #touch.land .mv{flex:1.2 1 0} #touch.land .hit{flex:1.5 1 0}
-  #touch.land .gs{margin-left:12px}
+  #touch.land{flex-wrap:nowrap;padding:6px 8px;gap:8px}
+  #touch.land .gL{display:flex;gap:8px;flex:1.35 1 0}
+  #touch.land .gL .tb{flex:1 1 0;height:100%}
+  #touch.land .gR{display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:1fr 1fr;gap:6px;flex:2.5 1 0}
+  #touch.land .gR .tb{height:auto;flex-direction:row;gap:4px}
+  #touch.land .gR .sk{grid-column:span 2} #touch.land .gR .ax{grid-column:span 3}
+  #touch.land .hit{flex:1.1 1 0;height:100%}
+  #touch.port .gL,#touch.port .gR{display:contents}
   #touch.port .mv{flex:1 1 26%;height:54px;order:0} #touch.port .hit{flex:1 1 34%;height:54px;order:0}
   #touch.port .ax,#touch.port .sk{flex:1 1 17%;height:40px;order:2}
   #menubtn{position:fixed;top:8px;right:8px;width:40px;height:40px;z-index:5}
@@ -70,6 +73,12 @@
     #msg{font-size:26px}.pop3d{font-size:30px}
     #panel{padding:14px 18px}#panel h1{font-size:24px}#panel p{font-size:13px;margin:4px 0}.btns{margin-top:10px}.btns button{font-size:15px;padding:9px 14px}
   }
+  #toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(30,36,50,.96);color:#ffe066;padding:8px 16px;border-radius:12px;font-weight:800;font-size:15px;z-index:12;display:none;border:2px solid #ffd166;text-align:center;max-width:90vw}
+  .sw{display:inline-block;width:38px;height:38px;border-radius:9px;border:3px solid #3b4660;margin:3px;vertical-align:middle;text-align:center;line-height:32px;font-size:13px;color:#fff;cursor:pointer}
+  .sw.sel{border-color:#ffd166;box-shadow:0 0 0 2px rgba(255,209,102,.4)} .sw.lk{opacity:.35;cursor:default}
+  .ach{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid #2c3550;font-size:13px;text-align:left}
+  .ach.done{color:#ffe066} .ach small{opacity:.75}
+  .bar{height:8px;background:#2c3550;border-radius:6px;overflow:hidden;margin:4px 0}.bar>i{display:block;height:100%;background:#ffd166}
   #tot{font-size:13px;font-weight:800;color:#ffd166}
   #vfx{position:fixed;inset:0;pointer-events:none;z-index:11;overflow:hidden}
   .vv{position:absolute;bottom:-90px;opacity:0;animation:vrise 3s ease-out forwards}
@@ -89,6 +98,7 @@
   <div class="num" id="s1">0</div><div class="pl" id="pl1">컴퓨터</div>
 </div>
 <div id="msg"></div>
+<div id="toast"></div>
 <div id="vfx"></div>
 <div id="touch"></div>
 <div id="chargewrap"><div id="charge"></div></div>
@@ -101,16 +111,16 @@
 const W = 1.525, L = 2.74, R = 0.02, G = -9.8, NETH = 0.1525, FLOOR = -0.76, PZ = 2.15, REACH = 0.48;
 const VAL = [[3,2,3],[2,1,2],[3,2,3]];          // 코트 9칸 점수 (row0=네트 쪽, row2=끝 쪽)
 const STAGES = [
-  {name:'탁구 초보 민수',      desc:'아직 공을 잘 못 따라와요. 기본기부터!',                    speed:.8,react:.45,track:.40,smash:0,  corner:.05,err:.32,curve:0,  drop:0,  spin:0,  t:11},
-  {name:'동네 탁구장 아저씨',  desc:'꾸준히 받아내요. 코너를 노려 보세요.',                      speed:1.0,react:.34,track:.30,smash:.02,corner:.10,err:.24,curve:0,  drop:0,  spin:.1, t:11},
-  {name:'중학교 탁구부 에이스', desc:'가끔 커브샷을 써요.',                                      speed:1.25,react:.26,track:.22,smash:.08,corner:.18,err:.18,curve:.12,drop:0,  spin:.2, t:11},
-  {name:'서브 달인 누나',      desc:'커브와 드롭샷을 섞어요. 앞으로 튀어나가 받으세요.',          speed:1.55,react:.20,track:.14,smash:.14,corner:.25,err:.13,curve:.20,drop:.08,spin:.3, t:11},
-  {name:'스매시 왕 코치',      desc:'높은 공은 가차 없이 스매시!',                              speed:1.7,react:.17,track:.11,smash:.30,corner:.30,err:.11,curve:.15,drop:.10,spin:.4, t:11},
-  {name:'커브 마술사',         desc:'공이 휘어서 날아와요. 끝까지 보고 움직이세요.',             speed:1.85,react:.15,track:.09,smash:.20,corner:.35,err:.09,curve:.40,drop:.10,spin:.5, t:11},
-  {name:'드롭 장인 할머니',    desc:'네트 앞에 톡 떨어뜨려요. 앞으로 달려가세요!',              speed:2.0,react:.14,track:.08,smash:.20,corner:.35,err:.09,curve:.15,drop:.35,spin:.6, t:11},
-  {name:'국가대표 후보',       desc:'모든 기술을 씁니다.',                                      speed:2.2,react:.12,track:.06,smash:.30,corner:.45,err:.07,curve:.25,drop:.20,spin:.75,t:11},
-  {name:'탁구 챔피언',         desc:'거의 실수하지 않아요.',                                    speed:2.45,react:.10,track:.05,smash:.35,corner:.50,err:.05,curve:.30,drop:.25,spin:.9, t:11},
-  {name:'탁구의 신 (최종)',    desc:'최종 보스. 15점 선승!',                                    speed:2.8,react:.08,track:.03,smash:.42,corner:.60,err:.03,curve:.30,drop:.30,spin:1,  t:15}
+  {name:'탁구 초보 민수',      desc:'아직 공을 잘 못 따라와요. 기본기부터!',                    speed:.8,react:.45,track:.40,smash:0,  corner:.05,err:.32,curve:0,  drop:0,  spin:0,  t:7, style:'novice', trait:'기본기를 익히는 상대예요.'},
+  {name:'동네 탁구장 아저씨',  desc:'꾸준히 받아내요. 코너를 노려 보세요.',                      speed:1.0,react:.34,track:.30,smash:.02,corner:.10,err:.24,curve:0,  drop:0,  spin:.1, t:7, style:'wall', trait:'수비형 — 어떤 공이든 안전하게 넘겨요. 코스를 넓게 노려야 해요.'},
+  {name:'중학교 탁구부 에이스', desc:'가끔 커브샷을 써요.',                                      speed:1.25,react:.26,track:.22,smash:.08,corner:.18,err:.18,curve:.12,drop:0,  spin:.2, t:7, style:'rush', trait:'공격형 — 탁구대 가까이 붙어서 받아쳐요. 빠른 공에 주의!'},
+  {name:'서브 달인 누나',      desc:'커브와 드롭샷을 섞어요. 앞으로 튀어나가 받으세요.',          speed:1.55,react:.20,track:.14,smash:.14,corner:.25,err:.13,curve:.20,drop:.08,spin:.3, t:7, style:'trick', trait:'3번째 공마다 드롭샷을 섞어요. 앞으로 나올 준비!'},
+  {name:'스매시 왕 코치',      desc:'높은 공은 가차 없이 스매시!',                              speed:1.7,react:.17,track:.11,smash:.30,corner:.30,err:.11,curve:.15,drop:.10,spin:.4, t:7, style:'smasher', trait:'높은 공은 거의 항상 스매시! 대신 낮은 공은 약해요. 공을 낮게 보내세요.'},
+  {name:'커브 마술사',         desc:'공이 휘어서 날아와요. 끝까지 보고 움직이세요.',             speed:1.85,react:.15,track:.09,smash:.20,corner:.35,err:.09,curve:.40,drop:.10,spin:.5, t:7, style:'spin', trait:'커브를 자주 써요. 공이 휘는 방향을 끝까지 보세요.'},
+  {name:'드롭 장인 할머니',    desc:'네트 앞에 톡 떨어뜨려요. 앞으로 달려가세요!',              speed:2.0,react:.14,track:.08,smash:.20,corner:.35,err:.09,curve:.15,drop:.35,spin:.6, t:7, style:'dropper', trait:'드롭샷 연타! 앞으로 바짝 붙어 있어요.'},
+  {name:'국가대표 후보',       desc:'모든 기술을 씁니다.',                                      speed:2.2,react:.12,track:.06,smash:.30,corner:.45,err:.07,curve:.25,drop:.20,spin:.75,t:7, style:'counter', trait:'내가 보낸 코너의 반대편으로 되받아쳐요.'},
+  {name:'탁구 챔피언',         desc:'거의 실수하지 않아요.',                                    speed:2.45,react:.10,track:.05,smash:.35,corner:.50,err:.05,curve:.30,drop:.25,spin:.9, t:7, style:'adaptive', trait:'내가 못 가는 쪽만 노려요. 한 곳만 노리면 읽혀요.'},
+  {name:'탁구의 신 (최종)',    desc:'최종 보스. 11점 선승!',                                    speed:2.8,react:.08,track:.03,smash:.42,corner:.60,err:.03,curve:.30,drop:.30,spin:1,  t:11, style:'boss', trait:'모든 버릇이 섞여 나와요. 최종 보스!'}
 ];
 let stage=1, gauge=2, primary=null;
 function ldn(k){ try{ return parseInt(localStorage.getItem(k)||'0')||0; }catch(e){ return 0; } }
@@ -121,6 +131,71 @@ let assistLv=(()=>{ try{ const v=localStorage.getItem('ppAssist'); return v===nu
 const assistLabel=()=>['끔 (점수 +30%)','약함 (점수 +15%)','보통'][assistLv];
 function cycAssist(){ assistLv=(assistLv+2)%3; svn('ppAssist',assistLv); const b=$('assistbtn'); if(b) b.textContent='보조: '+assistLabel(); }
 function fx(stop,shake){ hitStopT=Math.max(hitStopT,stop); shakeAmt=Math.max(shakeAmt,shake); }
+
+/* ---- 누적 기록 · 업적 · 오늘의 도전 · 스킨 (서버 없이 이 기기 안에만 저장) ---- */
+let PS=(()=>{ try{ return JSON.parse(localStorage.getItem('ppStats')||'{}')||{}; }catch(e){ return {}; } })();
+function psave(){ try{ localStorage.setItem('ppStats',JSON.stringify(PS)); }catch(e){} }
+const pst=(k,n=1)=>{ if(DEMO) return; PS[k]=(PS[k]||0)+n; psave(); };
+const pmax=(k,v)=>{ if(DEMO) return; if(v>(PS[k]||0)){ PS[k]=v; psave(); } };
+const ACH=[['first','첫 득점','첫 득점 성공','points',1],['p50','득점 50','총 50랠리 승리','points',50],['p300','득점 300','총 300랠리 승리','points',300],
+ ['pf10','타이밍 장인','PERFECT 10번','perfects',10],['pf100','타이밍 달인','PERFECT 100번','perfects',100],['sm20','스매셔','스매시 20번','smashes',20],
+ ['cv15','마구 휘는 공','커브 15번','curves',15],['dr15','톡 떨어뜨리기','드롭샷 15번','drops',15],['jp10','하늘을 나는 선수','점프 스매시 10번','jumps',10],
+ ['bd3','새 사냥꾼','새 3마리 맞히기','birds',3],['bd20','새 박사','새 20마리 맞히기','birds',20],['rl15','긴 랠리','공이 15번 오가기','maxRally',15],
+ ['rl30','끝없는 랠리','공이 30번 오가기','maxRally',30],['z20','코너 명수','300점 칸 득점 20번','zone3',20],['big','한 방','한 랠리에 500점 이상','bigRally',1],
+ ['c3','3단계 돌파','스테이지 3 클리어','stageMax',3],['c6','6단계 돌파','스테이지 6 클리어','stageMax',6],['c10','탁구의 신을 꺾다','10단계 전체 클리어','final',1],
+ ['sh','완봉승','상대 0점으로 승리','shutouts',1],['as0','실력파','보조를 끄고 스테이지 클리어','assist0Clears',1]];
+const SHIRTS=[{n:'기본 빨강',c:0xd94141,at:0},{n:'파랑',c:0x2f6fe0,at:2000},{n:'초록',c:0x2fa05a,at:6000},{n:'보라',c:0x8a4fd8,at:12000},{n:'금빛',c:0xe0b020,at:25000},{n:'검정',c:0x222428,at:45000}];
+const RACKETS=[{n:'기본 빨강',c:0xd62828,at:0},{n:'파랑',c:0x2b6be6,at:3000},{n:'초록',c:0x28b463,at:9000},{n:'황금',c:0xf1c40f,at:20000},{n:'분홍',c:0xff5fa2,at:35000}];
+const DAILY=[{id:'pf',n:'PERFECT 8번 치기',goal:8,ev:'perfect'},{id:'bd',n:'새 3마리 맞히기',goal:3,ev:'bird'},{id:'sm',n:'스매시 10번 치기',goal:10,ev:'smash'},
+ {id:'z3',n:'300점 칸에 6번 득점',goal:6,ev:'zone3'},{id:'jp',n:'점프 스매시 5번 치기',goal:5,ev:'jump',need:3},{id:'cv',n:'커브샷 8번 치기',goal:8,ev:'curve'},
+ {id:'dr',n:'드롭샷 8번 치기',goal:8,ev:'drop',need:2},{id:'rl',n:'공이 12번 오가는 랠리 만들기',goal:1,ev:'longrally'},{id:'win',n:'스테이지 1번 클리어',goal:1,ev:'clear'},{id:'pts',n:'랠리 20번 이기기',goal:20,ev:'point'}];
+const todayKey=()=>{ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; };
+let PD=(()=>{ try{ return JSON.parse(localStorage.getItem('ppDaily')||'{}')||{}; }catch(e){ return {}; } })();
+function dailyGet(){
+  if(PD.d!==todayKey()){ const k=todayKey(), sv=ldn('ppStage')||1, ok=DAILY.filter(c=>!c.need||sv>=c.need); let h=0; for(const ch of k) h=(h*31+ch.charCodeAt(0))>>>0;
+    PD={d:k,id:ok[h%ok.length].id,n:0,done:false}; try{ localStorage.setItem('ppDaily',JSON.stringify(PD)); }catch(e){} }
+  return DAILY.find(c=>c.id===PD.id)||DAILY[0];
+}
+function dailyEvent(ev,n=1){
+  if(DEMO) return; const c=dailyGet(); if(PD.done||c.ev!==ev) return; PD.n=(PD.n||0)+n;
+  if(PD.n>=c.goal){ PD.done=true; PS.life=(PS.life||0)+1000; psave(); toast('🎯 오늘의 도전 완료! +1,000점 (스킨 점수에 더해져요)'); checkSkins(); }
+  try{ localStorage.setItem('ppDaily',JSON.stringify(PD)); }catch(e){}
+}
+let toastQ=[], toastBusy=false;
+function toast(m){ toastQ.push(m); if(!toastBusy) nextToast(); }
+function nextToast(){ const t=$('toast'); const m=toastQ.shift(); if(!m){ toastBusy=false; t.style.display='none'; return; } toastBusy=true; t.textContent=m; t.style.display='block'; setTimeout(nextToast,2600); }
+function ldAch(){ try{ return JSON.parse(localStorage.getItem('ppAch')||'{}')||{}; }catch(e){ return {}; } }
+function checkAch(){
+  if(DEMO) return; const got=ldAch(); let ch=false;
+  ACH.forEach(a=>{ if(!got[a[0]]&&(PS[a[3]]||0)>=a[4]){ got[a[0]]=1; ch=true; toast('🏅 업적 달성: '+a[1]); } });
+  if(ch){ try{ localStorage.setItem('ppAch',JSON.stringify(got)); }catch(e){} }
+}
+function checkSkins(){
+  if(DEMO) return; PS.un=PS.un||[]; let ch=false; const life=PS.life||0;
+  SHIRTS.forEach((x,i)=>{ if(x.at>0&&life>=x.at&&!PS.un.includes('s'+i)){ PS.un.push('s'+i); ch=true; toast('🎁 새 옷 해금: '+x.n); } });
+  RACKETS.forEach((x,i)=>{ if(x.at>0&&life>=x.at&&!PS.un.includes('r'+i)){ PS.un.push('r'+i); ch=true; toast('🎁 새 라켓 해금: '+x.n); } });
+  if(ch) psave();
+}
+let skin=(()=>{ try{ const v=(localStorage.getItem('ppSkin')||'0,0').split(',').map(x=>parseInt(x)||0); return {s:v[0],r:v[1]}; }catch(e){ return {s:0,r:0}; } })();
+function applySkin(){ try{ me.char.cloth.color.setHex(SHIRTS[skin.s].c); me.char.bladeR.material.color.setHex(RACKETS[skin.r].c); }catch(e){} }
+function pickSkin(kind,i){ const life=PS.life||0, list=kind==='s'?SHIRTS:RACKETS; if(life<list[i].at) return; skin[kind]=i; try{ localStorage.setItem('ppSkin',skin.s+','+skin.r); }catch(e){} applySkin(); showBook(); }
+function showBook(){
+  clearBirds(); state='menu'; $('ov').style.display='flex'; const life=PS.life||0, got=ldAch(), c=dailyGet();
+  const sw=(list,kind)=>list.map((x,i)=>{ const un=life>=x.at, hex='#'+x.c.toString(16).padStart(6,'0'); return `<span class="sw ${un?'':'lk'} ${skin[kind]===i?'sel':''}" style="background:${hex}" title="${x.n}" ${un?`onclick="pickSkin('${kind}',${i})"`:''}>${un?'':'🔒'}</span>`; }).join('');
+  const nextU=[...SHIRTS,...RACKETS].map(x=>x.at).filter(a=>a>life).sort((a,b)=>a-b)[0];
+  const st=(k)=>(PS[k]||0).toLocaleString();
+  $('panel').innerHTML=`<h1>📒 기록장</h1>
+  <p style="text-align:center;color:#ffd166">🎯 오늘의 도전: <b>${c.n}</b> — ${PD.done?'<b>완료!</b>':(PD.n||0)+' / '+c.goal} <span style="opacity:.7">(보상 +1,000점)</span></p>
+  <div class="bar"><i style="width:${PD.done?100:Math.min(100,(PD.n||0)/c.goal*100)}%"></i></div>
+  <p style="text-align:center">🏆 스킨 점수 <b>${life.toLocaleString()}</b>${nextU?` · 다음 해금 ${nextU.toLocaleString()}`:' · 전부 해금!'} <span style="opacity:.7;font-size:12px">(점수를 얻을 때마다 쌓여요)</span></p>
+  <p style="text-align:center;margin:2px 0">옷 ${sw(SHIRTS,'s')}</p><p style="text-align:center;margin:2px 0">라켓 ${sw(RACKETS,'r')}</p>
+  <p style="margin:8px 0 2px"><b>업적</b> ${Object.keys(got).length} / ${ACH.length}</p>
+  ${ACH.map(a=>`<div class="ach ${got[a[0]]?'done':''}"><span>${got[a[0]]?'🏅':'⬜'} <b>${a[1]}</b> <small>${a[2]}</small></span><small>${got[a[0]]?'달성':Math.min(PS[a[3]]||0,a[4])+'/'+a[4]}</small></div>`).join('')}
+  <p style="margin:8px 0 2px"><b>통계</b></p>
+  <p style="font-size:12px;line-height:1.6">이긴 랠리 ${st('points')} · PERFECT ${st('perfects')} · 스매시 ${st('smashes')} · 커브 ${st('curves')} · 드롭 ${st('drops')} · 점프 ${st('jumps')} · 새 ${st('birds')} · 최장 랠리 ${st('maxRally')} · 최고 기록 ${best.toLocaleString()}점</p>
+  <div class="btns"><button onclick="showMenu()">돌아가기</button></div>`;
+  primary=showMenu;
+}
 const total=()=>runTotal+stageScore;
 function updateTotal(){ const e=$('tot'); if(e) e.textContent='점수 '+total().toLocaleString(); }
 function calcScore(info,birdB){
@@ -221,8 +296,8 @@ box(W-.2,.06,L-.4, lg, 0,-.07,0);
   for(let side=0; side<2; side++) for(let row=0; row<3; row++) for(let col=0; col<3; col++){
     const v=VAL[row][col];
     const cy = side===0 ? ph/2 + (row+.5)*ch : ph/2 - (row+.5)*ch;
-    g.font = `900 ${v===3?96:v===2?78:62}px sans-serif`; g.fillStyle=colr[v];
-    g.fillText(String(v), (col+.5)*cw, cy);
+    g.font = `900 ${v===3?62:v===2?52:44}px sans-serif`; g.fillStyle=colr[v];
+    g.fillText(String(v*100), (col+.5)*cw, cy);
   }
   const tex=new THREE.CanvasTexture(c); tex.anisotropy=8; tex.encoding=THREE.sRGBEncoding;
   const top=new THREE.Mesh(new THREE.PlaneGeometry(W,L), new THREE.MeshStandardMaterial({map:tex,roughness:.5}));
@@ -304,7 +379,7 @@ function makeChar(shirt, hair, isMe){
   add(pad,new THREE.Mesh(new THREE.CylinderGeometry(.013,.016,.1,8),M(0xc89b5a,.6)),0,-.03,0);
   const bladeR=add(pad,new THREE.Mesh(new THREE.CylinderGeometry(.088,.088,.008,24),M(0xd62828,.5)),0,.09,.005); bladeR.rotation.x=Math.PI/2;
   const bladeB=add(pad,new THREE.Mesh(new THREE.CylinderGeometry(.088,.088,.008,24),M(0x151515,.5)),0,.09,-.005); bladeB.rotation.x=Math.PI/2;
-  return {root,upper,legs,armR,armL,pad,cloth};
+  return {root,upper,legs,armR,armL,pad,cloth,bladeR};
 }
 
 const players = [];
@@ -340,9 +415,11 @@ function updateScore(){ $('s0').textContent=score[0]; $('s1').textContent=score[
 function endPoint(winner, pts, text, at, cls, info){
   if(state!=='rally') return;
   const birdB=bonus[winner]||0;
-  if(bonus[winner]){ pts+=bonus[winner]; text+=` (🐦보너스 포함)`; } bonus=[0,0];
+  if(bonus[winner]) text+=` (🐦보너스)`; bonus=[0,0];
   let sc=0;
   if(winner===0){ sc=calcScore(info,birdB); stageScore+=sc; if(total()>best){ best=total(); svn('ppBest',best); } updateTotal(); text+=` · +${sc.toLocaleString()}점`; }
+  pmax('maxRally',ball.rally); if(ball.rally>=12) dailyEvent('longrally');
+  if(winner===0){ pst('points'); pst('life',sc); dailyEvent('point'); if(info&&info.kind==='zone'&&info.val===3){ pst('zone3'); dailyEvent('zone3'); } if(sc>=500) pst('bigRally'); checkAch(); checkSkins(); }
   score[winner]+=pts; state='point'; timer=1.7; updateScore(); stats.rallies++;
   say(text, cls); if(at) popup(winner===0?('+'+sc.toLocaleString()):('+'+pts), at);
   (winner===0?SFX.win:SFX.lose)();
@@ -357,7 +434,7 @@ function fault(faulter, why){
 function winByZone(hitter){
   const zn=ball.zone||{val:1,row:1,col:1}; stats.zoneWins++;
   const label=zn.val===3?'코너 명중!':zn.val===2?'좋은 코스!':'득점';
-  endPoint(hitter, zn.val, hitter===0?`${label} +${zn.val}`:`컴퓨터 ${label} +${zn.val}`, ball.pos, hitter===0?'':'bad', {kind:'zone',val:zn.val,tech:ball.tech,fire:ball.fire,perfect:ball.perfect});
+  endPoint(hitter, 1, hitter===0?`${label}`:`컴퓨터 ${label}`, ball.pos, hitter===0?'':'bad', {kind:'zone',val:zn.val,tech:ball.tech,fire:ball.fire,perfect:ball.perfect});
   if(hitter===0&&zn.val===3) fx(0,.05);
 }
 function nextPoint(){
@@ -380,9 +457,10 @@ function startStage(n){
   stage=n; save(n); score=[0,0]; stageScore=0; server=0; rallyCount=0; gauge=Math.max(gauge,1); curLoss=ldn('ppLoss'+n); updateScore(); updateSkill(); updateTotal();
   const g=stg(); cpu.char.cloth.color.setHSL((n*.093)%1,.55,.45);
   $('goal').textContent=`스테이지 ${n}/10 · ${g.t}점 선승`;
-  const unlock = n===1?'<p>💡 공이 내 쪽으로 튀어 오면 <b>Z</b>를 눌러 <b>커브샷</b>! 공이 휘어서 날아가 상대가 위치를 잘못 읽어요. (기술 게이지 1칸 사용)</p>' : n===2?'<p>🆕 <b>새 기술 해금: X 드롭샷</b> — 네트 앞에 톡 떨어뜨려요. 상대가 앞으로 나와야 합니다.</p>' : n===3?'<p>🆕 <b>새 기술 해금: C 점프 스매시</b> — 높이 뛰어올라 내려치는 강력한 샷! 기술 게이지 2칸을 쓰고, 상대가 받기 아주 어려워요.</p>' : '';
+  let unlock = n===1?'<p>💡 공이 내 쪽으로 튀어 오면 <b>Z</b>를 눌러 <b>커브샷</b>! 공이 휘어서 날아가 상대가 위치를 잘못 읽어요. (기술 게이지 1칸 사용)</p>' : n===2?'<p>🆕 <b>새 기술 해금: X 드롭샷</b> — 네트 앞에 톡 떨어뜨려요. 상대가 앞으로 나와야 합니다.</p>' : n===3?'<p>🆕 <b>새 기술 해금: C 점프 스매시</b> — 높이 뛰어올라 내려치는 강력한 샷! 기술 게이지 2칸을 쓰고, 상대가 받기 아주 어려워요.</p>' : '';
+  if(document.body.classList.contains('touch')) unlock=unlock.replace('<b>Z</b>를','<b>커브 버튼</b>을').replace('X 드롭샷','드롭샷').replace('C 점프 스매시','점프 스매시');
   state='intro'; $('ov').style.display='flex';
-  $('panel').innerHTML=`<h1>스테이지 ${n}</h1><p style="text-align:center;font-size:22px;color:#ffd166;margin:2px 0">${g.name}</p><p style="text-align:center">${g.desc}</p>${unlock}<p style="text-align:center">${g.t}점 먼저 내면 승리</p><div class="btns"><button onclick="beginStage()">시작 (Space)</button></div>`;
+  $('panel').innerHTML=`<h1>스테이지 ${n}</h1><p style="text-align:center;font-size:22px;color:#ffd166;margin:2px 0">${g.name}</p><p style="text-align:center">${g.desc}</p>${unlock}<p style="text-align:center;color:#9fd0ff">⚔ ${g.trait}</p><p style="text-align:center">${g.t}점 먼저 내면 승리</p><div class="btns"><button onclick="beginStage()">시작 (Space)</button></div>`;
   primary=beginStage;
 }
 function newRun(){ runTotal=0; svn('ppTotal',0); startStage(1); }
@@ -397,14 +475,15 @@ function quitGame(){
 function showMenu(){ clearBirds(); $('msg').textContent='';
   state='menu'; $('ov').style.display='flex'; const sv=saved();
   $('panel').innerHTML=`<h1>🏓 탁구 한 판 · 10단계</h1>
-  <p>• <b>← →</b> 이동, <b>Space</b> 치기 (<b>꾹 눌렀다 떼면 스매시</b>). 칠 때 ←/→는 코너 방향, ↑는 깊게, ↓는 짧게.</p>
-  <p>• 코트 9칸에 <span class="z3">3</span>·<span class="z2">2</span>·<span class="z1">1</span>점. 상대가 못 받은 공이 처음 떨어진 칸의 점수를 얻어요. 네트·아웃은 상대 +1.</p>
-  <p>• <b>Z 커브샷</b>(휘는 공)을 쓸 수 있고, 스테이지 2부터 <b>X 드롭샷</b>(네트 앞에 톡), 3부터 <b>C 점프 스매시</b>(강력!)도 열려요. 컴퓨터는 단계마다 더 강해져요. 공은 <b>한 번 튀긴 뒤</b>에 쳐야 해요.</p>
+  ${document.body.classList.contains('touch')?'<p>• 화면 아래 버튼으로 해요. 왼쪽 <b>◀ ▶</b> 이동, 오른쪽 <b>치기</b>(꾹 눌렀다 떼면 스매시). <b>깊게/짧게</b>는 누르면 그 코스로 치고, 칠 때 ◀ ▶를 같이 누르고 있으면 그쪽 코너로 가요.</p>':'<p>• <b>← →</b> 이동, <b>Space</b> 치기 (<b>꾹 눌렀다 떼면 스매시</b>). 칠 때 ←/→는 코너 방향, ↑는 깊게, ↓는 짧게.</p>'}
+  <p>• 승패는 <b>한 랠리에 1점</b>, <b>7점 먼저</b> 내면 승리(최종 보스 11점). 코트 칸에 적힌 <span class="z3">300</span>·<span class="z2">200</span>·<span class="z1">100</span>은 <b>내 점수</b>예요 — 상대가 못 받은 공이 처음 떨어진 칸의 점수를 얻어요. 네트·아웃은 상대 1점.</p>
+  <p>• <b>커브샷</b>(휘는 공)을 쓸 수 있고, 스테이지 2부터 <b>드롭샷</b>(네트 앞에 톡), 3부터 <b>점프 스매시</b>(강력!)도 열려요. <b>📒 기록장</b>에서 업적·스킨·오늘의 도전을 볼 수 있어요. 컴퓨터는 단계마다 더 강해져요. 공은 <b>한 번 튀긴 뒤</b>에 쳐야 해요.</p>
   <p>• 🐦 경기 중 날아다니는 <b>새를 공으로 맞히면</b> 🔥불꽃공 / ⭐보너스 점수 / 기술 게이지 충전 중 하나! &nbsp;(Esc: 메뉴)</p>
   <p>• 🏅 공을 이길 때마다 <b>점수</b>가 쌓여요 (칸 점수 × 100 + 랠리 길이 + 기술·새 보너스, 스테이지가 오를수록 배율↑). 스테이지를 깨면 클리어 보너스!</p>
   <p>• ⚡ 공이 가까이 왔을 때 <b>딱 맞춰</b> 치면 <b>PERFECT!</b> (더 빠른 공 + 게이지 보너스 + 점수). 보조(자동 조준·이동)를 줄이면 점수가 더 붙어요.</p>
+  <p style="text-align:center;color:#9fd0ff">🎯 오늘의 도전: ${dailyGet().n} — ${PD.done?'완료!':(PD.n||0)+' / '+dailyGet().goal}</p>
   <p style="text-align:center;color:#ffd166">🏅 최고 기록 ${best.toLocaleString()}점${sv>1?` · 현재 누적 ${runTotal.toLocaleString()}점`:''}</p>
-  <div class="btns">${sv>1?`<button onclick="startStage(${sv})">이어하기 (스테이지 ${sv})</button>`:''}<button onclick="newRun()">처음부터</button><button id="assistbtn" onclick="cycAssist()" style="background:#8892a8">보조: ${assistLabel()}</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`;
+  <div class="btns">${sv>1?`<button onclick="startStage(${sv})">이어하기 (스테이지 ${sv})</button>`:''}<button onclick="newRun()">처음부터</button><button onclick="showBook()">📒 기록장</button><button id="assistbtn" onclick="cycAssist()" style="background:#8892a8">보조: ${assistLabel()}</button><button onclick="quitGame()" style="background:#8892a8">종료</button></div>`;
   primary=()=>startStage(sv);
 }
 function showOver(winner){
@@ -413,6 +492,7 @@ function showOver(winner){
   const btn2='<button onclick="showMenu()" style="background:#8892a8">메뉴</button><button onclick="quitGame()" style="background:#8892a8">종료</button>';
   if(winner===0){
     const margin=Math.max(0,score[0]-score[1]), clear=1000+stage*200+margin*100, gain=stageScore;
+    pst('clears'); pmax('stageMax',stage); dailyEvent('clear'); if(score[1]===0) pst('shutouts'); if(assistLv===0) pst('assist0Clears'); if(last) pst('final'); pst('life',clear); checkAch(); checkSkins();
     runTotal+=gain+clear; stageScore=0; svn('ppTotal',runTotal); if(runTotal>best){ best=runTotal; svn('ppBest',best); } updateTotal();
     const rows=`<p style="text-align:center;line-height:1.7">이번 스테이지 점수 <b>${gain.toLocaleString()}</b><br>클리어 보너스 <b>+${clear.toLocaleString()}</b> <span style="opacity:.7">(기본 1,000 + 스테이지 ${stage*200} + 점수차 ${margin}×100)</span><br>누적 점수 <b style="color:#ffd166;font-size:20px">${runTotal.toLocaleString()}</b> · 최고 기록 <b>${best.toLocaleString()}</b></p>`;
     if(last){ vfx(60,true); SFX.win(); save(1); const fin=runTotal; runTotal=0; svn('ppTotal',0);
@@ -446,7 +526,10 @@ function doHit(p, smash){
   let tx, depth, tech=smash?null:p.tech; p.tech=null;
   const fire=fireReady[p.id]; if(fire){ fireReady[p.id]=false; smash=false; tech=null; updateSkill(); }
   if(!p.ai && tech){ const cost=tech==='jump'?2:1; if(gauge>=cost){ gauge-=cost; updateSkill(); } else { tech=null; say('기술 게이지 부족','small'); } }
-  if(p.ai && !smash && !tech && state!=='serve'){ const r=Math.random(); if(r<dif.curve) tech='curve'; else if(r<dif.curve+dif.drop) tech='drop'; }
+  const sty=p.ai?styleOf():null; if(p.ai) p.hits=(p.hits||0)+1;
+  if(p.ai && !smash && !tech && state!=='serve'){ const r=Math.random();
+    const cv=sty==='spin'?Math.max(dif.curve,.55):dif.curve, dr=sty==='dropper'?Math.max(dif.drop,.4):dif.drop;
+    if(sty==='trick'&&p.hits%3===0) tech='drop'; else if(r<cv) tech='curve'; else if(r<cv+dr) tech='drop'; }
   if(!p.ai){
     const ax=(K.R()?1:0)-(K.L()?1:0);
     if(ax!==0) tx = ax*.5 + clamp(b.x-px,-.3,.3)*.8;
@@ -456,11 +539,13 @@ function doHit(p, smash){
   } else {
     if(Math.random()<dif.corner) tx=(o.x>0?-1:1)*.52*(.85+Math.random()*.3); else tx=(Math.random()-.5)*.9;
     const r=Math.random(); depth = r<.4?1.1 : r<.8?.78 : .4;
+    if(sty==='wall'){ tx=(Math.random()-.5)*.35; depth=.8; }
+    else if(sty==='counter'||sty==='adaptive'){ tx=(o.x>.05?-1:1)*(.5+Math.random()*.1); if(sty==='adaptive') depth=Math.random()<.6?1.1:.4; }
   }
   if(tech==='drop') depth=.52+Math.random()*.08;
   let jit=0;
   if(smash){ const q=clamp((b.y-.05)/.3,0,1); jit=.04+.3*(1-q); if(p.ai) jit+=dif.err*.5; }
-  else if(p.ai) jit=dif.err*.6;
+  else if(p.ai) jit=dif.err*.6*(sty==='wall'?.5:1);
   if(fire) jit=.05+(p.ai?dif.err*.3:0);
   if(tech==='jump') jit=.04;
   if(grade==='early') jit+=.05;
@@ -485,6 +570,7 @@ function doHit(p, smash){
   $('rally').textContent = ball.rally>2 ? `랠리 ${ball.rally}` : '';
   o.err=(Math.random()-.5)*2*dif.track; if(tech==='curve') o.err+=(Math.random()-.5)*2*.45*(1-dif.spin);
   if(fire){ SFX.smash(); say(p.id===0?'🔥 불꽃공!':'컴퓨터 불꽃공!','small'); } else if(tech==='jump'){ SFX.smash(); noise(.2,.5); say('💥 점프 스매시!','small'); } else if(smash){ stats.smashes++; SFX.smash(); if(p.id===0) say('스매시!','small'); } else { SFX.hit(); if(tech&&p.id===0) say(tech==='curve'?'커브!':'드롭!','small'); }
+  if(!p.ai){ if(perfect){ pst('perfects'); dailyEvent('perfect'); } if(tech==='curve'){ pst('curves'); dailyEvent('curve'); } else if(tech==='drop'){ pst('drops'); dailyEvent('drop'); } else if(tech==='jump'){ pst('jumps'); dailyEvent('jump'); } else if(smash){ pst('smashes'); dailyEvent('smash'); } }
   if(fire) fx(.08,.08); else if(tech==='jump') fx(.09,.1); else if(smash) fx(.07,.06);
 }
 function physics(dt){
@@ -570,13 +656,13 @@ function checkBirds(){
   if(ball.last!==0) return;   // 새는 내가 친 공에만 맞음(컴퓨터 공은 통과)
   for(const b of birds){ if(b.dead) continue;
     const dx=ball.pos.x-b.x, dy=ball.pos.y-b.y, dz=ball.pos.z-b.z;
-    if(dx*dx+dy*dy+dz*dz<.2*.2){ b.dead=true; b.vy=1.6; SFX.bird(); stats.birds=(stats.birds||0)+1; popup('🐦',b.g.position); if(ball.last>=0) birdEffect(ball.last); }
+    if(dx*dx+dy*dy+dz*dz<.2*.2){ b.dead=true; b.vy=1.6; SFX.bird(); stats.birds=(stats.birds||0)+1; pst('birds'); dailyEvent('bird'); popup('🐦',b.g.position); if(ball.last>=0) birdEffect(ball.last); }
   }
 }
 function birdEffect(who){
   const r=Math.random(); let m;
   if(r<.4){ fireReady[who]=true; m=who===0?'🐦 명중! 🔥 다음 샷은 불꽃공!':'🐦 컴퓨터가 새를 맞혔다! (불꽃공 장전)'; }
-  else if(r<.8||who===1){ bonus[who]+=2; m=who===0?'🐦 명중! 이번 랠리 득점 +2 보너스':'🐦 컴퓨터가 새를 맞혔다! (보너스)'; }
+  else if(r<.8||who===1){ bonus[who]+=2; m=who===0?'🐦 명중! 이번 랠리 점수 +100 보너스':'🐦 컴퓨터가 새를 맞혔다! (보너스)'; }
   else { gauge=Math.min(3,gauge+1); m='🐦 명중! 기술 게이지 +1'; }
   say(m, who===0?'':'bad'); updateSkill();
 }
@@ -587,17 +673,21 @@ function birdEffect(who){
   if(!isTouch) return;
   document.body.classList.add('touch'); const box=$('touch'); box.style.display='flex';
   addEventListener('contextmenu',e=>e.preventDefault());
-  const defs=[['ArrowLeft','◀','mv'],['ArrowRight','▶','mv'],
-              ['KeyC','점프<small>2칸</small>','sk gs'],['KeyX','드롭<small>1칸</small>','sk'],
-              ['DeepHit','깊게<small>끝쪽</small>','ax gs'],['ShortHit','짧게<small>네트앞</small>','ax'],['KeyZ','커브<small>1칸</small>','sk'],
-              ['Space','치기<small>꾹=스매시</small>','hit'],['Escape','☰','']];
+  const gL=document.createElement('div'); gL.className='gL'; const gR=document.createElement('div'); gR.className='gR';
+  box.appendChild(gL); box.appendChild(gR);
+  const defs=[['ArrowLeft','◀','mv',gL],['ArrowRight','▶','mv',gL],
+              ['KeyZ','커브<small>1칸</small>','sk',gR],['KeyX','드롭<small>1칸</small>','sk',gR],['KeyC','점프<small>2칸</small>','sk',gR],
+              ['DeepHit','깊게<small>끝쪽</small>','ax',gR],['ShortHit','짧게<small>네트앞</small>','ax',gR],
+              ['Space','치기<small>꾹=스매시</small>','hit',box],['Escape','☰','',null]];
   const els={};
-  defs.forEach(([code,label,cls])=>{
+  defs.forEach(([code,label,cls,parent])=>{
     const b=document.createElement('div'); b.className='tb '+cls; b.innerHTML=label; els[code]=b;
-    const down=e=>{ e.preventDefault(); b.classList.add('on'); try{b.setPointerCapture(e.pointerId);}catch(_){} dispatchEvent(new KeyboardEvent('keydown',{code})); };
+    const down=e=>{ e.preventDefault(); b.classList.add('on'); try{b.setPointerCapture(e.pointerId);}catch(_){}
+      if(code!=='ArrowLeft'&&code!=='ArrowRight'&&code!=='Escape'){ try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} }   // 누르는 느낌
+      dispatchEvent(new KeyboardEvent('keydown',{code})); };
     const up=e=>{ e.preventDefault(); if(!b.classList.contains('on')) return; b.classList.remove('on'); dispatchEvent(new KeyboardEvent('keyup',{code})); };
     b.addEventListener('pointerdown',down); b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up); b.addEventListener('lostpointercapture',up);
-    if(code==='Escape'){ b.id='menubtn'; document.body.appendChild(b); } else box.appendChild(b);
+    if(code==='Escape'){ b.id='menubtn'; document.body.appendChild(b); } else parent.appendChild(b);
   });
   window.layoutTouch=function(){ const land=innerWidth>=innerHeight; box.classList.toggle('land',land); box.classList.toggle('port',!land); };
   window.lockTouch=function(){ els.KeyZ.classList.toggle('lock',gauge<1); els.KeyX.classList.toggle('lock',stage<2||gauge<1); els.KeyC.classList.toggle('lock',stage<3||gauge<2); };
@@ -608,8 +698,10 @@ new MutationObserver(()=>{ ovT=Date.now(); }).observe($('panel'),{childList:true
 $('panel').addEventListener('click',e=>{ if(Date.now()-ovT<800){ e.stopPropagation(); e.preventDefault(); } },true);
 
 /* ================= 컴퓨터(AI) ================= */
+const styleOf=()=>{ const s=stg().style; return s==='boss'?['wall','rush','trick','smasher','spin','dropper','counter','adaptive'][Math.floor(Math.random()*8)]:s; };
+const rushOff=()=>{ const s=stg().style; return (s==='rush'||s==='dropper')?.4:(s==='boss'?.25:0); };
 function chaseZ(p, dt){
-  const o=p.id===0?cpu:me; let zt=p.id===0?PZ:-PZ;
+  const o=p.id===0?cpu:me; let zt=p.id===0?PZ:-PZ+rushOff();
   if(state==='rally'&&ball.last===o.id&&ball.bounces>=1&&ball.v.z*p.fwd<0&&Math.abs(ball.v.z)<2.2){
     const want=ball.pos.z-p.fwd*.5; zt=p.id===0?clamp(want,1.5,PZ):clamp(want,-PZ,-1.5);
   }
@@ -629,7 +721,7 @@ function aiControl(p, dt){
   if(state==='rally' && ball.last===o.id && Math.abs(ball.pos.z-p.z)<1.1) speed*=1.15;
   const dx=clamp(target-p.x,-speed*dt,speed*dt); p.x+=dx; p.vx=dx/dt;
   if(state==='rally' && ball.last===o.id && ball.bounces>=1 && p.mode==='idle' && p.whiffRally!==ball.rally+':'+state && ball.v.z*p.fwd<0 && Math.abs(ball.pos.z-p.z)<.75)
-    startStrike(p, ball.pos.y>.2 && Math.random()<dif.smash);
+    startStrike(p, (dif.style==='smasher')?(ball.pos.y>.25&&Math.random()<.75):(ball.pos.y>.2&&Math.random()<dif.smash));
 }
 
 /* ================= 선수 갱신(팔 동작) ================= */
@@ -727,16 +819,17 @@ function loop(){
 let LOOKY=-.25, LOOKZ=.1;
 function fitCam(){
   const touch=document.body.classList.contains('touch'), land=innerWidth>=innerHeight;
-  const bar=touch?(land?70:124):0; document.documentElement.style.setProperty('--bar',bar+'px');
+  const bar=touch?(land?104:124):0; document.documentElement.style.setProperty('--bar',bar+'px');
   if(touch){ $('touch').style.height=bar+'px'; if(window.layoutTouch) window.layoutTouch(); }
   const w=innerWidth, h=Math.max(120,innerHeight-bar), a=w/h; camera.aspect=a;
-  if(a>=1.9){ camera.fov=39; camera.position.y=3.2; camera.position.z=4.4; LOOKY=-.1; LOOKZ=-.05; }
+  if(a>=1.9){ camera.fov=32; camera.position.y=3.1; camera.position.z=4.3; LOOKY=-.1; LOOKZ=-.05; }
   else if(a>=1.2){ camera.fov=44; camera.position.y=3.7; camera.position.z=5.3; LOOKY=-.25; LOOKZ=.1; }
   else { camera.fov=Math.min(85, 2*Math.atan(Math.tan(22*Math.PI/180)*1.2/a)*180/Math.PI); camera.position.y=3.7; camera.position.z=5.3; LOOKY=-.25; LOOKZ=.1; }
   camera.updateProjectionMatrix(); renderer.setSize(w,h);
 }
 addEventListener('resize',fitCam); fitCam();
-updateSkill(); updateTotal(); showMenu(); loop();
+applySkin(); checkSkins(); updateSkill(); updateTotal(); showMenu(); loop();
+if(/book/.test(location.search)) setTimeout(()=>{ PS.life=7000; PS.points=60; PS.perfects=12; PS.birds=4; showBook(); },900);
 if(/vtest/.test(location.search)) setTimeout(()=>{ stage=+(/stage=(\d+)/.exec(location.search)||[0,3])[1]; state='over'; score=[11,4]; stageScore=3450; showOver(0); },1200);
 </script>
 </body>
