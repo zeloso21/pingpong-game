@@ -81,7 +81,7 @@
 <div id="hint">← → 이동 &nbsp;·&nbsp; ↑ 깊게 / ↓ 짧게 &nbsp;·&nbsp; <b>Space</b> 치기 (꾹 눌렀다 떼면 <b>스매시</b>) &nbsp;·&nbsp; <b>Z</b> 커브샷(공이 튀어 올 때 누르기) &nbsp;·&nbsp; <b>X</b> 드롭샷(2단계~) &nbsp;·&nbsp; <b>C</b> 점프 스매시(3단계~, 게이지 2칸)</div>
 <div id="ov"><div id="panel"></div></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="three.min.js"></script>
 <script>
 /* ================= 기본 상수 ================= */
 const W = 1.525, L = 2.74, R = 0.02, G = -9.8, NETH = 0.1525, FLOOR = -0.76, PZ = 2.15, REACH = 0.48;
@@ -340,6 +340,7 @@ function startStage(n){
 }
 function beginStage(){ $('ov').style.display='none'; $('msg').textContent=''; startServe(); }
 function quitGame(){
+  try{ const A=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App; if(A&&A.exitApp){ A.exitApp(); return; } }catch(e){}
   try{ window.close(); }catch(e){}
   setTimeout(()=>{ try{ if(history.length>1){ history.back(); return; } }catch(e){} location.replace('about:blank'); }, 700);
   state='menu'; clearBirds(); $('ov').style.display='flex'; $('msg').textContent='';
