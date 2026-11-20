@@ -43,12 +43,12 @@
   #touch .hit{background:rgba(255,170,40,.45);font-size:17px;border-color:#ffd166}
   #touch .tb.on{background:rgba(255,230,120,.75);color:#222;text-shadow:none}
   #touch .tb.lock{opacity:.35}
-  #touch.land{flex-wrap:nowrap;padding:5px 10px;gap:0;justify-content:space-between;align-items:stretch}
-  #touch.land .gL,#touch.land .gR{display:flex;gap:6px;flex:0 0 auto}
-  #touch.land .tb{height:100%;width:auto;aspect-ratio:1/1;flex:0 0 auto;flex-direction:column;gap:0;font-size:12px;border-radius:9px}
+  #touch.land{flex-wrap:nowrap;padding:5px 34px;gap:0;justify-content:space-between;align-items:stretch}
+  #touch.land .gL,#touch.land .gR{display:flex;gap:6px;flex:0 1 auto;min-width:0}
+  #touch.land .tb{height:100%;width:clamp(46px,8.4vw,72px);flex:0 1 auto;min-width:40px;flex-direction:column;gap:0;font-size:13px;border-radius:9px}
   #touch.land .tb small{font-size:8px}
-  #touch.land .mv{font-size:22px}
-  #touch.land .gR .gap{margin-left:8px}
+  #touch.land .mv{width:clamp(52px,10.4vw,88px);font-size:24px}
+  #touch.land .hit{width:clamp(52px,10.4vw,88px)}
   #touch.port .gL,#touch.port .gR{display:contents}
   #touch.port .mv{flex:1 1 26%;height:54px;order:0} #touch.port .hit{flex:1 1 34%;height:54px;order:0}
   #touch.port .ax,#touch.port .sk{flex:1 1 17%;height:40px;order:2}
@@ -681,8 +681,8 @@ function birdEffect(who){
   const gL=document.createElement('div'); gL.className='gL'; const gR=document.createElement('div'); gR.className='gR';
   box.appendChild(gL); box.appendChild(gR);
   const defs=[['ArrowLeft','◀','mv',gL],['ArrowRight','▶','mv',gL],
-              ['KeyZ','커브<small>1칸</small>','sk',gR],['KeyX','드롭<small>1칸</small>','sk',gR],['KeyC','점프<small>2칸</small>','sk',gR],
-              ['DeepHit','깊게<small>끝쪽</small>','ax',gR],['ShortHit','짧게<small>네트앞</small>','ax',gR],
+              ['KeyX','드롭<small>1칸</small>','sk',gL],['KeyC','점프<small>2칸</small>','sk',gL],
+              ['KeyZ','커브<small>1칸</small>','sk',gR],['DeepHit','깊게<small>끝쪽</small>','ax',gR],['ShortHit','짧게<small>네트앞</small>','ax',gR],
               ['Space','치기<small>꾹=스매시</small>','hit',gR],['Escape','☰','',null]];
   const els={};
   defs.forEach(([code,label,cls,parent])=>{
