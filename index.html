@@ -573,8 +573,8 @@ function doHit(p, smash){
     const cv=sty==='spin'?Math.max(dif.curve,.55):dif.curve, dr=sty==='dropper'?Math.max(dif.drop,.4):dif.drop;
     if(sty==='trick'&&p.hits%3===0) tech='drop'; else if(r<cv) tech='curve'; else if(r<cv+dr) tech='drop'; }
   if(!p.ai){
-    const ax=(K.R()?1:0)-(K.L()?1:0);
-    if(ax!==0) tx = ax*.5 + clamp(b.x-px,-.3,.3)*.8;
+    const ax=aimDir();
+    if(ax!==0) tx = ax*.6 + clamp(b.x-px,-.3,.3)*.4;   // 방향을 주면 그쪽 바깥 칸(코너)으로 확실히
     else if(assistLv===0) tx = clamp(b.x-px,-.3,.3)*.6;
     else { const side=o.x>.1?-1:o.x<-.1?1:(Math.random()<.5?-1:1); tx = side*(assistLv===1?.22:.4) + clamp(b.x-px,-.3,.3)*.3; }   // 방향 안 누르면 상대 반대쪽 코너로 자동 조준
     depth = (p.aim==='deep'||K.U())?1.12 : (p.aim==='short'||K.D())?.38 : .85; p.aim=null;
@@ -639,7 +639,11 @@ function physics(dt){
 /* ================= 키보드 ================= */
 const keys = {};
 const K = {L:()=>keys.ArrowLeft||keys.KeyA, R:()=>keys.ArrowRight||keys.KeyD, U:()=>keys.ArrowUp||keys.KeyW, D:()=>keys.ArrowDown||keys.KeyS};
+let dirV=0, dirT=0;   // 마지막 좌우 입력(누르거나 뗀 시각) — 스윙이 맞는 순간 이미 뗐어도 0.35초 안이면 그 방향으로 침
+function noteDir(e){ const c=e.code; if(c==='ArrowLeft'||c==='KeyA'){ dirV=-1; dirT=Date.now(); } else if(c==='ArrowRight'||c==='KeyD'){ dirV=1; dirT=Date.now(); } }
+function aimDir(){ const h=(K.R()?1:0)-(K.L()?1:0); if(h!==0) return h; return Date.now()-dirT<350?dirV:0; }
 addEventListener('keydown', e=>{
+  noteDir(e);
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
   if(e.repeat) return; keys[e.code]=true; audio();
   if(e.code==='Escape'){ if(state!=='menu') showMenu(); return; }
@@ -658,6 +662,7 @@ addEventListener('keydown', e=>{
   if(e.code==='Space' && !DEMO && me.mode==='idle' && (state==='serve'||state==='rally')){ me.mode='charge'; me.charge=0; }
 });
 addEventListener('keyup', e=>{
+  noteDir(e);
   keys[e.code]=false;
   if(e.code==='Space' && me.mode==='charge') startStrike(me, me.charge>.35);
 });
