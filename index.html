@@ -60,7 +60,7 @@
   .tb.on{background:rgba(255,209,102,.55)}
   .aimrow{position:fixed;display:none;z-index:6;pointer-events:auto;border-radius:12px;overflow:hidden;gap:1px;background:rgba(255,255,255,.42);border:2px solid rgba(255,255,255,.42);box-shadow:0 2px 10px rgba(0,0,0,.4)}
   body.touch .aimrow{display:flex}
-  .aimrow .ab{flex:1;min-width:52px;height:38px;background:rgba(96,102,118,.78);color:#fff;font:800 12px sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1;touch-action:none}
+  .aimrow .ab{flex:1;min-width:64px;height:38px;background:rgba(96,102,118,.78);color:#fff;font:800 12px sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1;touch-action:none}
   .aimrow .ab.on{background:rgba(255,200,40,.95);color:#222}
   #touch.land ~ .aimrow,.aimrow.land{left:calc(10px + env(safe-area-inset-left,0px));bottom:calc(12px + clamp(42px,12vh,52px)*2 + 12px)}
   .aimrow.port{left:8px;bottom:140px}
@@ -516,7 +516,7 @@ function quitGame(){
 function showHelp(){
   clearBirds(); $('msg').textContent=''; state='menu'; $('ov').style.display='flex';
   $('panel').innerHTML=`<h1>❓ 도움말</h1>
-  ${document.body.classList.contains('touch')?'<p>• 화면 아래 버튼으로 해요. 왼쪽 <b>◀ ▶</b> 이동, 오른쪽 <b>치기</b>(꾹 눌렀다 떼면 스매시). <b>깊게/짧게</b>는 누르면 그 코스로 치고, 이동 버튼 위의 <b>↖왼쪽 / 자동 / 오른쪽↗</b>을 한 번 눌러 두면 공이 그쪽 코너로 가요(다시 누르면 자동, 이동과는 따로예요).</p>':'<p>• <b>← →</b> 이동, <b>Space</b> 치기 (<b>꾹 눌렀다 떼면 스매시</b>). 칠 때 ←/→는 코너 방향, ↑는 깊게, ↓는 짧게.</p>'}
+  ${document.body.classList.contains('touch')?'<p>• 화면 아래 버튼으로 해요. 왼쪽 <b>◀ ▶</b> 이동, 오른쪽 <b>치기</b>(꾹 눌렀다 떼면 스매시). <b>깊게/짧게</b>는 누르면 그 코스로 치고, 이동 버튼 위의 <b>왼쪽/오른쪽 겨냥</b> 버튼을 <b>누른 채로</b> 치면 공이 그쪽 코너로 가요(안 누르면 자동 조준, 이동과는 따로예요).</p>':'<p>• <b>← →</b> 이동, <b>Space</b> 치기 (<b>꾹 눌렀다 떼면 스매시</b>). 칠 때 ←/→는 코너 방향, ↑는 깊게, ↓는 짧게.</p>'}
   <p>• 승패는 <b>한 랠리에 1점</b>, <b>7점 먼저</b> 내면 승리(최종 보스 11점). 코트 칸에 적힌 <span class="z3">300</span>·<span class="z2">200</span>·<span class="z1">100</span>은 <b>내 점수</b>예요 — 상대가 못 받은 공이 처음 떨어진 칸의 점수를 얻어요. 네트·아웃은 상대 1점.</p>
   <p>• <b>커브샷</b>(휘는 공)을 쓸 수 있고, 스테이지 2부터 <b>드롭샷</b>(네트 앞에 톡), 3부터 <b>점프 스매시</b>(강력!)도 열려요. <b>📒 기록장</b>에서 업적·스킨·오늘의 도전을 볼 수 있어요. 컴퓨터는 단계마다 더 강해져요. 공은 <b>한 번 튀긴 뒤</b>에 쳐야 해요.</p>
   <p>• 🐦 경기 중 날아다니는 <b>새를 공으로 맞히면</b> 🔥불꽃공 / ⭐보너스 점수 / 기술 게이지 충전 중 하나! &nbsp;(Esc: 메뉴)</p>
@@ -651,7 +651,8 @@ const aimMarks=[0,1,2].map(c=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(W
 function setAimLock(v){ aimLock=v; aimMarks.forEach((m,i)=>{ m.material.opacity=(v!==0&&i===v+1)?.30:0; }); document.querySelectorAll('.aimrow .ab').forEach(b=>b.classList.toggle('on',+b.dataset.v===v)); }
 let dirV=0, dirT=0;   // 마지막 좌우 입력(누르거나 뗀 시각) — 스윙이 맞는 순간 이미 뗐어도 0.35초 안이면 그 방향으로 침
 function noteDir(e){ const c=e.code; if(c==='ArrowLeft'||c==='KeyA'){ dirV=-1; dirT=Date.now(); } else if(c==='ArrowRight'||c==='KeyD'){ dirV=1; dirT=Date.now(); } }
-function aimDir(){ if(document.body.classList.contains('touch')) return aimLock;   // 폰은 이동 버튼과 겨냥을 분리
+let aimRelV=0, aimRelT=0;   // 폰: 겨냥 버튼을 뗀 시각(0.15초만 인정)
+function aimDir(){ if(document.body.classList.contains('touch')) return aimLock!==0?aimLock:(Date.now()-aimRelT<150?aimRelV:0);   // 폰은 이동 버튼과 겨냥을 분리, 겨냥 버튼을 누르고 있어야 함
   const h=(K.R()?1:0)-(K.L()?1:0); if(h!==0) return h; return Date.now()-dirT<350?dirV:0; }
 addEventListener('keydown', e=>{
   noteDir(e);
@@ -748,8 +749,10 @@ function birdEffect(who){
     if(code==='Escape'){ b.id='menubtn'; document.body.appendChild(b); } else parent.appendChild(b);
   });
   const ar=document.createElement('div'); ar.className='aimrow land';
-  [['-1','↖<br>왼쪽'],['0','자동'],['1','오른쪽<br>↗']].forEach(([v,t])=>{ const b=document.createElement('div'); b.className='ab'+(v==='0'?' on':''); b.dataset.v=v; b.innerHTML=t;
-    b.addEventListener('pointerdown',e=>{ e.preventDefault(); const n=+v; setAimLock(aimLock===n?0:n); try{ navigator.vibrate&&navigator.vibrate(8); }catch(_){} }); ar.appendChild(b); });
+  [['-1','◀ 왼쪽<br>겨냥'],['1','오른쪽 ▶<br>겨냥']].forEach(([v,t])=>{ const b=document.createElement('div'); b.className='ab'; b.dataset.v=v; b.innerHTML=t; const n=+v;
+    b.addEventListener('pointerdown',e=>{ e.preventDefault(); try{b.setPointerCapture(e.pointerId);}catch(_){} setAimLock(n); try{ navigator.vibrate&&navigator.vibrate(8); }catch(_){} });
+    const up=e=>{ e.preventDefault(); if(aimLock===n){ aimRelV=n; aimRelT=Date.now(); setAimLock(0); } };
+    b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up); b.addEventListener('lostpointercapture',up); ar.appendChild(b); });
   document.body.appendChild(ar);
   window.layoutTouch=function(){ const land=innerWidth>=innerHeight; box.classList.toggle('land',land); box.classList.toggle('port',!land); ar.classList.toggle('land',land); ar.classList.toggle('port',!land); };
   window.lockTouch=function(){ els.KeyZ.classList.toggle('lock',gauge<1); els.KeyX.classList.toggle('lock',stage<2||gauge<1); els.KeyC.classList.toggle('lock',stage<3||gauge<2); };
